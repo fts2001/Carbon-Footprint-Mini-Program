@@ -28,7 +28,7 @@
 
 
 
-<view class='progress-con'>抽奖积分 ： {{credit}}
+<view class='progress-con'>低碳积分 ： {{credit}}
   <progress percent="{{percent}}" show-info stroke-width="14rpx" activeColor="#00ffb9" backgroundColor="#6b7578" active="true" border-radius="20rpx" font-size="36rpx" />
   <!-- <view class="progress-notice">还差 {{(1000-userInfo.credit)/10}}% 即可兑换低碳大奖</view> -->
 </view>

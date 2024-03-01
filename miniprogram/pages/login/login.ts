@@ -9,6 +9,7 @@ Page({
    */
   data: {
     avatarUrl: defaultAvatarUrl,
+    region: null,
     carSelected: false,
     _id: null,
     openID: null,
@@ -16,8 +17,7 @@ Page({
     dobarr: ["18-23岁","24-29岁","30-39岁","40-49岁","50-59","60岁及以上"],
     occupationArr: ["学生","事业单位工作人员","党政机关工作人员", "国有企业员工", "外资企业雇员", "民营企业雇员", "私企或个体经营户", "体力工人", "自由职业者", "商业，服务从业者","退休"],
     gradArr: ["小学以下", "小学", "初中", "高中", "职高/中专", "大专", "大学", "硕士", "博士"],
-    transArr: ["步行或骑行","公共交通","驾驶机动车"],
-    carArr:["纯燃油车", "混合动力汽车", "插电式混合动力车", "增程式电动汽车","纯电动汽车"],
+    transArr: ["飞机","铁路","城际巴士","自驾","顺风车"],
     car:null,
     occu: null,
     grad: null,
@@ -103,7 +103,12 @@ Page({
       dob: e.detail.value
     })
   },
-
+  bindRegionChange:function(e){
+    console.log(e.detail.value)
+    this.setData({
+      region: e.detail.value
+    })
+  },
   bindemailchange: function(e){
     console.log(e.detail.value)
     this.setData({
@@ -122,13 +127,13 @@ Page({
   checkSubmit(){
     var email = this.data.email;
     var nickname = this.data.nickname;
-    var car= this.data.car;
+    var region = this.data.region;
     var dob= this.data.dob;
     var occu = this.data.occu;
     var grad = this.data.grad;
     var trans = this.data.trans;
     var avatar = this.data.avatarUrl
-    var reg1 =  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+    // var reg1 =  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
     console.log(nickname)
     if(avatar == defaultAvatarUrl){
       wx.showToast({
@@ -143,56 +148,56 @@ Page({
       })
       return 1 
     }
-    if(dob == null){
+    // if(dob == null){
+    //   wx.showToast({
+    //     title: '年龄未填写',
+    //     icon:"error"
+    //   })
+    //   return 1
+    // }
+    // if(occu == null){
+    //   wx.showToast({
+    //     title: '职业未填写',
+    //     icon:"error"
+    //   })
+    //   return 1
+    // }
+    // if(grad == null){
+    //   wx.showToast({
+    //     title: '学历未填写',
+    //     icon:"error"
+    //   })
+    //   return 1
+    // }
+    if(region==null){
       wx.showToast({
-        title: '年龄未填写',
-        icon:"error"
-      })
-      return 1
-    }
-    if(occu == null){
-      wx.showToast({
-        title: '职业未填写',
-        icon:"error"
-      })
-      return 1
-    }
-    if(grad == null){
-      wx.showToast({
-        title: '学历未填写',
-        icon:"error"
+        title: '始发地未填写',
+        icon:'error'
       })
       return 1
     }
     if(trans==null){
       wx.showToast({
-        title: '出行方式未填写',
+        title: '来程交通方式未填写',
         icon:"error"
       })
       return 1
     }
-    if(trans==2&&car==null){
-      wx.showToast({
-        title: '能源形式未填写',
-        icon:"error"
-      })
-      return 1 
-    }
-    if (email!='') {
-      if(reg1.test(email)==false){
-        console.log('邮箱格式错误，请检查');
-        wx.showToast({
-          title: "邮箱格式错误",
-          icon: "error",
-          duration: 2000,
-          mask: true,
-        })
-        this.setData({
-          email:''
-        })
-        return 1;
-      }
-    }
+    // if (email!='') {
+    //   if(reg1.test(email)==false){
+    //     console.log('邮箱格式错误，请检查');
+    //     wx.showToast({
+    //       title: "邮箱格式错误",
+    //       icon: "error",
+    //       duration: 2000,
+    //       mask: true,
+    //     })
+    //     this.setData({
+    //       email:''
+    //     })
+    //     return 1;
+    //   }
+    // }
     return 2 
   },
   login(e:any) {
@@ -223,7 +228,8 @@ Page({
           console.log(res.fileID);
           const path = res.fileID;
           const timestamp = new Date();
-          const userGroup = Math.floor(Math.random() * 3) + 1;
+          // const userGroup = Math.floor(Math.random() * 3) + 1;
+          const userGroup = 2
           const basicInfo = e.detail.value;
           await db.collection('lottery').add({
             data:{
@@ -267,11 +273,10 @@ Page({
               });
     
               // 延时跳转到指定页面
-              setTimeout(function () {
-                wx.navigateTo({
-                  url: "/pages/journal/journal?typeq=1"
-                });
-              }, 2000);
+              wx.switchTab({
+                  url:'/pages/center/center'
+                })
+              ;
             } else {
               // 如果找不到用户信息，显示错误提示
               wx.hideToast();

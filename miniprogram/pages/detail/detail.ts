@@ -10,7 +10,7 @@ Page({
     link: '',
     openid: '',
     openTime:'',
-    userInfo:''
+    userInfo:'',
   },
 
   /**

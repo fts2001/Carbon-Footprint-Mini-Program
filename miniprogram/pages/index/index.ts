@@ -80,6 +80,7 @@ Page({
       const userInfoQuery = await db.collection('userInfo')
         .where({ _openid: this.data.openID })
         .get();
+      console.log('the query is ', userInfoQuery)
       if (userInfoQuery.data.length === 1) {
         app.globalData.userInfo = userInfoQuery.data[0];
         wx.showToast({ 

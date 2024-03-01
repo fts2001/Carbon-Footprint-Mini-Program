@@ -3,8 +3,8 @@
   <view class="page-background">
   <view class="center-box">
     <view class="welcome-text">
-      <text>欢迎来到碳行家</text>
-      <text>Welcome to Carbon Master</text>
+      <text>欢迎来到低碳巴马</text>
+      <text>Welcome to BAMA</text>
     </view>
    
     <button bind:tap="HandleSignIn" class="login-button">登录</button>

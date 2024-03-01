@@ -11,7 +11,7 @@
 
 一、前言\n
 
-欢迎使用“碳行家”，这是一款专注于个人碳足迹可视化的小程序。作为开发者，我们深知信息安全的重要性。此声明旨在帮助您了解我们如何收集、使用、存储和保护您的个人信息。\n
+欢迎使用“低碳巴马”，这是一款专注于低碳生活的小程序。作为开发者，我们深知信息安全的重要性。此声明旨在帮助您了解我们如何收集、使用、存储和保护您的个人信息。\n
 
 二、信息收集\n
 
@@ -19,7 +19,7 @@
 
 三、合规性\n
 
-本小程序已经昆山杜克大学研究伦理委员会审查通过，符合学术研究规范要求。\n
+本小程序已经由微信公众平台审核通过，符合法律法规\n
 
 四、遵守规定\n
 
@@ -41,7 +41,7 @@
 
 
 
-  <view style="font-size:50rpx; padding: 20rpx; color: white;text-align: center; border-bottom: 5rpx solid #a5a4a4;">欢迎您使用低碳出街小助手！请完成注册开始您的低碳之旅</view>
+  <view style="font-size:50rpx; padding: 20rpx; color: white;text-align: center; border-bottom: 5rpx solid #a5a4a4;">欢迎您使用低碳巴马！请完成注册开始您的低碳之旅</view>
 
   <view class='baseInfo' wx:if="{{modalHidden}}">
     <!-- <text>基本信息</text> -->
@@ -67,7 +67,7 @@
       </label>
     </radio-group>
   </view>
- <view class='name'>
+ <!-- <view class='name'>
    <text>年龄</text>
    <picker bindchange = "bindDobChange" value = "{{ dob }}" range = "{{ dobarr }}" name = "dob">
    <view wx:if = "{{ dob }}">
@@ -77,8 +77,8 @@
    请选择
    </view>
    </picker>
-  </view>
-  <view class='name'>
+  </view> -->
+  <!-- <view class='name'>
     <text>当前职业</text>
     <picker bindchange="bindOccuChange" value="{{ occu }}" range="{{occupationArr}}" name="occupation">
     <view wx:if="{{ occu }}">
@@ -87,9 +87,9 @@
      <view wx:else style="color:white;">请选择</view>
     
    </picker>
-  </view>
+  </view> -->
  
-  <view class='name'>
+  <!-- <view class='name'>
    <text>最高学历</text>
 
    <picker bindchange="bindgradChange" value="{{ grad }}" range="{{gradArr}}" name="degree">
@@ -99,37 +99,36 @@
      <view wx:else style="color:white;">请选择</view>
     
    </picker>
-  </view>
+  </view> -->
+
  <view class="name">
- <text>电子邮件（选填）</text>
+ <text>联系方式（选填）</text>
   <input type="text" placeholder-style="color:white" placeholder="用于奖品发放" name = "email" bindinput="bindemailchange" value="{{ email }}"/> 
  </view>
+ 
 <view class='baseInfo'>
-  
   <text>出行方式</text>
 </view>
+
 <view class='sex'>
-    <text>城市通勤方式</text>
+    <text>始发地</text>
+    <picker bindchange="bindRegionChange" value = "{{region}}" mode = "region" name="departure">
+    <view wx:if="{{region}}">
+      {{region[0]}}，{{region[1]}}，{{region[2]}}
+     </view>
+     <view wx:else style="color: white;">请选择</view>
+   </picker>
+</view>
+
+<view class='sex'>
+    <text>来程交通方式</text>
     <picker bindchange="bindtransChange" value="{{ trans }}" range="{{transArr}}" name="trans">
     <view wx:if="{{ trans }}">
          {{ transArr[trans] }}
      </view>
      <view wx:else style="color: white;">请选择</view>
-    
    </picker>
   </view>
-  <view class='sex' wx:if="{{carSelected}}">
-    <text>最常驾驶的机动车的能源形式</text>
-    <picker bindchange="bindcarChange" value="{{ car }}" range="{{carArr}}" name="car">
-    <view wx:if="{{ car }}">
-         {{ carArr[car] }}
-     </view>
-     <view wx:else style="color:white">请选择</view>
-    
-   </picker>
-  </view>
-
-
 </view>
 
 <button form-type='submit' class="submit" style="margin-bottom: 100rpx; margin-top: 50rpx;">提交</button>

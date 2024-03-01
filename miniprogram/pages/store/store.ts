@@ -168,7 +168,7 @@ Page({
   },
   onLoad() {
     
-    const cost = 150
+    const cost = 20
     
     this.setData({
       userInfo: app.globalData.userInfo,
