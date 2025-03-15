@@ -1,7 +1,7 @@
 export default {
   /** 文章推荐系统信息 */
   RECOMMENDATION_VERSION: 2.1, // 用来识别是否需要处理旧用户的 （Note: 请勿轻易更改，会去除用户当前的articleRecommend信息）
-  ARTICLE_COLLECTION: 'article',
+  ARTICLE_COLLECTION: 'articles',
   RECOMMENDATION_DATA_COLLECTION: 'articleRecommend',
 
   /** 前一天推荐参数修正 */ 

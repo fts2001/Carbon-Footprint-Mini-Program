@@ -7,6 +7,11 @@ const app = getApp();
 
 Page({
   /**
+   * 页面常量
+   */
+  FIRST_PAGE: "information",
+
+  /**
    * 页面实例数据
    */
   isFetchingUserInfo: false,
@@ -157,7 +162,7 @@ Page({
           // });
           setTimeout(() => {
             wx.reLaunch({
-              url: "/pages/home/home",
+              url: `/pages/${this.FIRST_PAGE}/${this.FIRST_PAGE}`,
               complete: () => (this.isNavigating = false)
             });
           }, 500);
@@ -196,7 +201,7 @@ Page({
     });
     setTimeout(() => {
       wx.reLaunch({
-        url: "/pages/home/home",
+        url: `/pages/${this.FIRST_PAGE}/${this.FIRST_PAGE}`,
         complete: () => (this.isNavigating = false)
       });
     }, 500);
