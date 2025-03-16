@@ -96,14 +96,10 @@ Page({
    */
   async initUserData() {
     // 根据文章种类的数量分配 infoGroup 组 （去除碳行家的）
-    const totalInfoGroupNumber = Object.keys(defaultData.ARTICLE_AUTHORS).length - 1;
-    const infoGroup = Math.floor(Math.random() * totalInfoGroupNumber); 
-
-    // infoGroup 推荐文章的作者 author
-    const author = defaultData.ARTICLE_AUTHORS[infoGroup]
+    const infoGroup = Math.floor(Math.random() * defaultData.RECOMMENDATION_INFOGROUP_AMOUNT); 
 
     // 根据 author 得到对应的标签 list
-    const tagsList = defaultData.ARTICLE_TAGS[author]
+    const tagsList = Object.values(defaultData.ARTICLE_TAGS).flat();
 
     // 获得子标签的 list
     const subtagsList = Object.values(defaultData.ARTICLE_SUBTAGS).flat()
@@ -162,20 +158,28 @@ Page({
    * 获取云端文章
    * @returns {Array} 返回推荐的文章列表
    */  
-  async fetchArticles({ author = "", tags = [], subtags = [], geolocation = "", excludedIDs = [], count = 10 }) {
+  async fetchArticles({
+    author = "", 
+    tags = [], 
+    subtags = [], 
+    geolocation = "", 
+    excludedIDs = [], 
+    count = 10 
+  }) {
     const $ = db.command.aggregate;
 
     try {
       const currentTimestamp = Date.now();
+      const matchCondition = { 
+        _id: { $not: { $in: excludedIDs } },
+        ...(author !== "" && { author })
+      };
+
       const res = await db.collection(defaultData.ARTICLE_COLLECTION)
         .aggregate()
-        // 1. 过滤作者和排除的ID
-        .match({
-          author: author,
-          _id: db.command.nin(excludedIDs)
-        })
+        // 1. 过滤作者，排除的ID
+        .match(matchCondition)
   
-        
         .addFields({
           // 2. 计算 tags 匹配比例的分数
           tagsIntersectionScore: $.multiply($.size($.setIntersection([tags, "$tags"])), defaultData.ARTICLE_WEIGHT_SCORES.TAG),
@@ -255,9 +259,7 @@ Page({
 
     // [第二步]: 处理 totalScore === 0 的情况
     if (totalScore === 0) {
-      return tagList
-        .sort(() => Math.random() - 0.5) // 随机打乱数组
-        .slice(0, tagCount); // 取前 tagCount 个
+      return tagList.reduce((acc, _, i, arr) => (i === arr.length - 1 ? acc : [arr.splice(Math.floor(Math.random() * arr.length), 1)[0], ...acc]), []).slice(0, tagCount);
     }
 
     // [第三步]: 计算累积分布
@@ -333,7 +335,6 @@ Page({
    */
   async getArticles(articleCount = 3){
     try {
-      const author = defaultData.ARTICLE_AUTHORS[this.data.articleRecommend.infoGroup]
       const tags = this.getRecommendationTags(2);
       const subtags = this.getRecommendationSubTags(2);
       const excludedIDs = this.data.articleRecommend.recommendedIDs
@@ -343,9 +344,10 @@ Page({
         author: defaultData.ARTICLE_AUTHORS[-1]
       })
 
+      console.log(tags[0])
+
       // 普通文章推荐
       articles = articles.concat(await this.fetchArticles({
-        author: author,
         tags: tags,
         subtags: subtags,
         geolocation: '',
@@ -353,6 +355,7 @@ Page({
         count: articleCount
       }))
 
+      // 更新 articleShowList
       this.setData({
         articleShowList: articles
       })
@@ -414,7 +417,6 @@ Page({
 
     // 构建URL
     const url = `/pages/detail/detail?title=${title}&uploadTime=${uploadTime}&geolocation=${geolocation}&tags=${tags}&imgs=${imgs}&texts=${texts}`;
-
 
     // 导航到对应链接
     wx.navigateTo({

@@ -1,8 +1,9 @@
 export default {
   /** 文章推荐系统信息 */
-  RECOMMENDATION_VERSION: 2.1, // 用来识别是否需要处理旧用户的 （Note: 请勿轻易更改，会去除用户当前的articleRecommend信息）
+  RECOMMENDATION_VERSION: '2.1.1', // 用来识别是否需要处理旧用户的 （Note: 请勿轻易更改，会去除用户当前的articleRecommend信息）
   ARTICLE_COLLECTION: 'articles',
   RECOMMENDATION_DATA_COLLECTION: 'articleRecommend',
+  RECOMMENDATION_INFOGROUP_AMOUNT: 2,
 
   /** 前一天推荐参数修正 */ 
   DAILY_MULTIPLIER: 0.75,
@@ -15,7 +16,7 @@ export default {
     dislikeAmount: -2.0
   },
 
-  /** infoGroup对应的文章作者 */
+  /** 文章作者索引 */
   ARTICLE_AUTHORS: {
     '-1': '碳行家',
     '0' : '个人版',
@@ -24,8 +25,8 @@ export default {
 
   /** 文章推荐分数权重 */
   ARTICLE_WEIGHT_SCORES: {
-    'TAG': 3,
-    'SUBTAG': 2,
+    'TAG': 5,
+    'SUBTAG': 5,
     'GEOLOCATION': 2,
     'TIME': 3
   },
