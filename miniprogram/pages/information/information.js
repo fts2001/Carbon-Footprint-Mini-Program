@@ -11,7 +11,7 @@ Page({
    * 页面的初始数据
    */
   data: {
-    /** 常量数据 defaultData ，这个是给UI访问的 */
+    /** 常量数据 defaultData ，这个是给UI访问的, 默认直接用 defaultData 而不是 this.data.defaultData */
     defaultData,
 
     /** 页面基本信息 */
@@ -19,6 +19,7 @@ Page({
 
     /** UI 相关 */
     UISelectedTag: '',
+    UIArticleTags: ['综合'],
     articleShowList: [],
 
     /** 用户基本信息 */
@@ -347,7 +348,7 @@ Page({
         author: author,
         tags: tags,
         subtags: subtags,
-        geolocation: '', // TODO: 替换用户的地理位置
+        geolocation: '',
         excludedIDs: excludedIDs,
         count: articleCount
       }))
@@ -355,6 +356,11 @@ Page({
       this.setData({
         articleShowList: articles
       })
+
+      // 更新 UIArticleTags
+      this.setData({ 
+        UIArticleTags: [this.data.UIArticleTags[0], ...[...new Set(this.data.articleShowList.flatMap(a => (a.tags || []).filter(Boolean)))].sort()] 
+      });      
 
       console.log("文章分配成功：\n", articles)
     } catch(error) {
@@ -375,7 +381,7 @@ Page({
     })
 
     const updatedList = this.data.articleShowList.map(article => {
-      article.isTagShow = article.tags?.includes(this.data.UISelectedTag);
+      article.isTagShow = (this.data.UISelectedTag === this.data.UIArticleTags[0] && article.author !== defaultData.ARTICLE_AUTHORS['-1']) || article.tags?.includes(this.data.UISelectedTag);
       return article;
     });
 
@@ -441,7 +447,7 @@ Page({
     this.bindSelectUITag({
       currentTarget: {
         dataset:{
-          tag: defaultData.ARTICLE_TAGS[defaultData.ARTICLE_AUTHORS[this.data.articleRecommend.infoGroup]][0]
+          tag: this.data.UIArticleTags[0]
         }
       }
     })
@@ -509,6 +515,13 @@ Page({
     wx.setNavigationBarTitle({
       title: '碳行家｜信息中心'
     })
+  },
+
+  /**
+   * 下拉刷新
+   */
+  onPullDownRefresh() {
+    
   },
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

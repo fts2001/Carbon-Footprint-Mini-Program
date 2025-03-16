@@ -38,7 +38,7 @@
 
       <!-- 标签筛选 -->
       <view class="horizontal-tags-container">
-        <view wx:for="{{defaultData.ARTICLE_TAGS[defaultData.ARTICLE_AUTHORS[articleRecommend.infoGroup]]}}" wx:for-index="i" wx:key="i" class="horizontal-tag {{UISelectedTag === item ? 'active' : ''}}" bindtap="bindSelectUITag" >{{item}}</view>
+        <view wx:for="{{UIArticleTags}}" wx:for-index="i" wx:key="i" class="horizontal-tag {{UISelectedTag === item ? 'active' : ''}}" bindtap="bindSelectUITag" data-tag="{{item}}">{{item}}</view>
       </view>
 
       <!-- 标签文章分类 -->
@@ -47,9 +47,12 @@
           <view class="article-text">
             <view class="circle">{{item.geolocation}}</view>
             <view class="title">{{item.title}}</view>
-            <view class="dislike" wx:if="{{!item.isUnread && userInfo && item.author != articleAuthors[-1]}}">
+
+            <!-- 不喜欢处理，目前禁用 -->
+            <!-- <view class="dislike" wx:if="{{!item.isUnread && userInfo && item.author != articleAuthors[-1]}}">
               <image class="dislike-img" src="{{item.doDislike ? '../../asset/img/dislike-highlight.png' : '../../asset/img/dislike.png'}}" catchtap="bindDislike" data-id="{{item._id}}"/>
-            </view>
+            </view> -->
+
           </view>
           <image class="article-image" src="{{item.imgs[0]}}"></image>
         </view>
