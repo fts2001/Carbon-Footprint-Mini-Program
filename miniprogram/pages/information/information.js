@@ -33,9 +33,9 @@ Page({
     articleRecommend: {}
   },
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////// 云数据处理 CLOUD HANDLING ///////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////
+  /////////////////// 云数据处理 CLOUD HANDLING ///////////////////
+  ////////////////////////////////////////////////////////////////
 
   /**
    * 获取云端数据，!! 这是初始化页面必须先做的 !!
@@ -49,11 +49,14 @@ Page({
 
       // 继承结构
       const formattedData = Object.assign({}, defaultData.RECOMMENDATION_DATA_KEYS, cloudData);
+      delete formattedData._openid;
+      delete formattedData._id;
 
       // 存在本地
       this.setData({
         articleRecommend: formattedData
       })
+
     } catch (error) {
       console.error("获取用户云端数据出错：", error);
     }
@@ -86,6 +89,8 @@ Page({
           }
         });
       }
+
+      console.log("成功上传用户数据至云端")
     } catch(error) {
       console.error("上传云端用户推荐数据失败", error);
     }
@@ -111,17 +116,18 @@ Page({
     const recommendedArticles = Object.fromEntries(
       Object.values(defaultData.ARTICLE_AUTHORS).map(author => [author, []])
     );
-    defaultData.RECOMMENDATION_FEATURES.forEach(feature => {
-      // 初始化每个 feature 为一个包含 tags 和 subtags 的对象
+    let shouldNormalized = false;
+    Object.keys(defaultData.RECOMMEND_FEATURES).forEach(feature => {
+      shouldNormalized = defaultData.RECOMMEND_FEATURES[feature].NORMALIZED;
       features[feature] = {
-          tags: tagsList.reduce((acc, tag) => {
-              acc[tag] = totalTags > 0 ? 1 / totalTags : 0; // 归一化到 [0,1]
-              return acc;
-          }, {}),
-          subtags: subtagsList.reduce((acc, subtag) => {
-              acc[subtag] = totalSubtags > 0 ? 1 / totalSubtags : 0; // 归一化到 [0,1]
-              return acc;
-          }, {})
+        tags: tagsList.reduce((acc, tag) => {
+          acc[tag] = shouldNormalized ? (totalTags > 0 ? 1 / totalTags : 0) : 0;
+          return acc;
+        }, {}),
+        subtags: subtagsList.reduce((acc, subtag) => {
+          acc[subtag] = shouldNormalized ? (totalSubtags > 0 ? 1 / totalSubtags : 0) : 0;
+          return acc;
+        }, {})
       };
     });
 
@@ -244,9 +250,53 @@ Page({
     }
   },
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////// 文章推荐分配 RECOMMENDATION ///////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////
+  /////////////////// 文章推荐分配 RECOMMENDATION ///////////////////
+  //////////////////////////////////////////////////////////////////
+
+  /**
+   * 根据阅读文章的标签，更新文章的 Tag 和 Subtag 的特征
+   * @param {Array} tags 待更新的 tag 列表
+   * @param {Array} subtags 待更新的 subtag 列表
+   * @param {Boolean} isRepeated 是否重复观看
+   */
+  updateTagFeatures(tags, subtags, isRepeated) {
+    // 遍历 this.data.articleRecommend.features 中的每个 feature
+    for (const feature of Object.keys(defaultData.RECOMMEND_FEATURES)) {
+      // 若是此 feature 不考虑重复观看，则跳过
+      if (isRepeated && defaultData.RECOMMEND_FEATURES[feature].COUNT_REPEAT) continue;
+
+      // 获取当前 feature 的 tags 和 subtags
+      const featureTags = this.data.articleRecommend.features[feature].tags;
+      const featureSubtags = this.data.articleRecommend.features[feature].subtags;
+  
+      // 更新 tags 和 subtags
+      tags.forEach(tag => {
+        // 如果 tag 在当前 feature 的 tags 中，增加值
+        if (featureTags[tag] !== undefined) {
+          featureTags[tag] += defaultData.RECOMMEND_FEATURES[feature].UPDATESTEP.TAG;
+        }
+      });
+      subtags.forEach(subtag => {
+        // 如果 subtag 在当前 author 的 subtags 中，增加值
+        if (featureSubtags[subtag] !== undefined) {
+          featureSubtags[subtag] += defaultData.RECOMMEND_FEATURES[feature].UPDATESTEP.SUBTAG;
+        }
+      });
+  
+      // 如有必要，归一化 tags 和 subtags
+      if (defaultData.RECOMMEND_FEATURES[feature].NORMALIZED) {
+        const totalTagValue = Object.values(featureTags).reduce((acc, value) => acc + value, 0);
+        for (const tag in featureTags) {
+          featureTags[tag] /= totalTagValue;
+        }
+        const totalSubtagValue = Object.values(featureSubtags).reduce((acc, value) => acc + value, 0);
+        for (const subtag in featureSubtags) {
+          featureSubtags[subtag] /= totalSubtagValue;
+        }
+      }
+    }
+  },  
 
   /**
    * 根据用户的文章交互数据，返回推荐文章的 tags
@@ -256,11 +306,15 @@ Page({
     const features = this.data.articleRecommend.features;
     let tagScores = {};
 
-    // [第一步]：计算所有 tag 的累积分数
+    // [第一步]：计算所有 tag 的累积加权分数（归一化后）
     for (const key in features) {
       const tags = features[key].tags;
+      const weight = defaultData.RECOMMEND_FEATURES[key].WEIGHT;
+      let sum = Object.values(tags).reduce((acc, value) => acc + value, 0);
+      if (sum === 0) sum = 1;
       for (const tag in tags) {
-        tagScores[tag] = (tagScores[tag] || 0) + tags[tag];
+        const normalizedValue = tags[tag] / sum;
+        tagScores[tag] = (tagScores[tag] || 0) + normalizedValue * weight;
       }
     }
 
@@ -341,10 +395,51 @@ Page({
   },
 
   /**
+   * 根据输入的 count 和用户已阅读的文章，为每个作者分配需要生成的文章数量，其中每个作者作为键，值为对应的文章数量。（不算碳行家）
+   * 注：这块之后会根据 infoGroup 发生变动，可能会采用不同分组进行不同 author 的分配 （e.g: 30%个人， 70%强国）
+   * @param {number} count 文章数量
+   * @returns 返回一个对象，其中每个键是作者的名称（string），每个值是该作者需要生成的文章数量（number）
+   */
+  getAuthorGenerateArticleCount(count) {
+    // 计算根据 author 数量动态分配对应数量文章的推荐
+    const authorArticleCountRate = Object.fromEntries(
+      Object.entries(this.data.articleRecommend.recommendedArticles)
+        .filter(([key]) => key !== defaultData.ARTICLE_AUTHORS[-1])
+        .map(([key, articles]) => [
+          key,
+          (((articles.length + 1) / (Object.values(this.data.articleRecommend.recommendedArticles).flat().length + Object.keys(this.data.articleRecommend.recommendedArticles).length - 1 || 1)).toFixed(2)),
+        ])
+    );  
+
+    let totalAssignedArticles = 0;  
+    const authorGenerateArticleCount = Object.fromEntries(
+      Object.entries(
+        Object.fromEntries(
+          Object.entries(authorArticleCountRate).map(([key, rate]) => [
+            key,
+            Math.max(Math.round(rate * count), Math.floor(count * 0.2)), // 保证每个作者文章数不少于 20%
+          ])
+        )
+      ).map(([key, count], i, arr) => {
+        totalAssignedArticles += count;
+        if (totalAssignedArticles > count) {
+          const diff = totalAssignedArticles - count;
+          if (i === 0) {
+            return [key, count - diff];
+          }
+        }
+        return [key, count];
+      })
+    );
+
+    return authorGenerateArticleCount
+  },
+
+  /**
    * 给用户生成新文章，并添加在articleShowList中
    * @param {number} articleCount 除去碳行家文章数量
    */
-  async getArticles(articleCount = 3){
+  async getArticles(articleCount = 10){
     try {
       // 获取用户推荐文章标签
       const tags = this.getRecommendationTags(2);
@@ -355,56 +450,32 @@ Page({
         this.data.articleRecommend.recommendedArticles
       ).flat();
 
-      // 计算根据 author 数量分配对应数量文章的推荐
-      // 注：这块之后会根据 infoGroup 发生变动
-      const authorArticleCountRate = Object.fromEntries(
-        Object.entries(this.data.articleRecommend.recommendedArticles)
-          .filter(([key]) => key !== defaultData.ARTICLE_AUTHORS[-1])
-          .map(([key, articles]) => [
-            key,
-            (((articles.length + 1) / (Object.values(this.data.articleRecommend.recommendedArticles).flat().length + Object.keys(this.data.articleRecommend.recommendedArticles).length - 1 || 1)).toFixed(2)),
-          ])
-      );  
-      let totalAssignedArticles = 0;  
-      const authorGenerateArticleCount = Object.fromEntries(
-        Object.entries(
-          Object.fromEntries(
-            Object.entries(authorArticleCountRate).map(([key, rate]) => [
-              key,
-              Math.max(Math.round(rate * articleCount), Math.floor(articleCount * 0.2)), // 保证每个作者文章数不少于 20%
-            ])
-          )
-        ).map(([key, count], i, arr) => {
-          totalAssignedArticles += count;
-          if (totalAssignedArticles > articleCount) {
-            const diff = totalAssignedArticles - articleCount;
-            if (i === 0) {
-              return [key, count - diff];
-            }
-          }
-      
-          return [key, count];
-        })
-      );
+      // 获取根据 author 数量动态分配对应数量文章的推荐
+      const authorCountPair = this.getAuthorGenerateArticleCount(articleCount)
 
       // 碳行家默认文章
-      let articles = await this.fetchArticles({
+      let carbonArticles = await this.fetchArticles({
         author: defaultData.ARTICLE_AUTHORS[-1]
       })
 
-      // 普通文章推荐
-      for (const [author, count] of Object.entries(authorGenerateArticleCount)) {
-        articles = articles.concat(await this.fetchArticles({
-          author: author,
-          tags: tags,
-          subtags: subtags,
-          geolocation: '', // TODO: 添加地域
-          excludedIDs: readIDs,
-          count: count
-        }));
+      // 普通文章推荐，并随机 shuffle 排序
+      let normalArticles = []
+      for (const [author, count] of Object.entries(authorCountPair)) {
+        normalArticles = normalArticles.concat(
+          (await this.fetchArticles({
+            author: author,
+            tags: tags,
+            subtags: subtags,
+            geolocation: '', // TODO: 添加地域
+            excludedIDs: readIDs,
+            count: count
+          }))
+        );
       }
+      normalArticles.sort(() => Math.random() - 0.5)
 
       // 更新 articleShowList
+      let articles = carbonArticles.concat(normalArticles)
       this.setData({
         articleShowList: articles
       })
@@ -415,16 +486,16 @@ Page({
       });      
 
       console.log("文章分配成功：\n")
-      console.log(authorGenerateArticleCount)
+      console.log(authorCountPair)
       console.log(articles)
     } catch(error) {
       console.error("分配文章失败: ", error)
     }
   },
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////// 界面交互 UI EVENT HANDLING ///////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
+  /////////////////// 界面交互 UI EVENT HANDLING ///////////////////
+  /////////////////////////////////////////////////////////////////
 
   /**
    * UI 界面的标签点击事件
@@ -473,15 +544,26 @@ Page({
     wx.navigateTo({
       url: url,
       success: () => {
-        // TODO: 更新文章 feature 分数
+        // 判断是否重复观看
+        const isRepeated = Object.values(this.data.articleRecommend.recommendedArticles).flat().includes(articleID)
+
+        // 更新文章 feature 分数
+        this.updateTagFeatures(targetArticle.tags, targetArticle.subtags, isRepeated)
+
+        // 如果未曾观看过，添加文章到已读列表
+        if (!isRepeated) {
+          this.data.articleRecommend.recommendedArticles[targetArticle.author].push(articleID)
+        }
+
+        // 上传数据
+        this.uploadUserDataToCloud();
       }
     })
   },
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////// 功能函数 LOCAL FUNCTIONAL METHOD ///////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+  ///////////////////////////////////////////////////////////////////////
+  /////////////////// 功能函数 LOCAL FUNCTIONAL METHOD ///////////////////
+  ///////////////////////////////////////////////////////////////////////
 
   /**
    * 初始化本页面数据
@@ -506,9 +588,9 @@ Page({
     })
   },
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////// 页面周期函数 PAGE BUILT-IN FUNCTIONS ///////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////
+  /////////////////// 页面周期函数 PAGE BUILT-IN FUNCTIONS ///////////////////
+  ///////////////////////////////////////////////////////////////////////////
 
   /**
    * 生命周期函数--监听页面加载
@@ -558,8 +640,6 @@ Page({
     // 更新颜色
     updateColor();
 
-    // TODO: 更新阅读量
-
     // 提交用户log
     logEvent('Information Center')
     console.log('info page showing up')
@@ -587,9 +667,9 @@ Page({
     })
   },
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////// 分享转发进入 PAGE SHARE IN ///////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
+  /////////////////// 分享转发进入 PAGE SHARE IN ///////////////////
+  /////////////////////////////////////////////////////////////////
 
   /**
    * 朋友圈分享
