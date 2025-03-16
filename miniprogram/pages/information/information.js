@@ -106,26 +106,31 @@ Page({
 
     // 初始化推荐文章系统的 features
     const features = {}
+    const totalTags = tagsList.length;
+    const totalSubtags = subtagsList.length;
+    const recommendedArticles = Object.fromEntries(
+      Object.values(defaultData.ARTICLE_AUTHORS).map(author => [author, []])
+    );
     defaultData.RECOMMENDATION_FEATURES.forEach(feature => {
       // 初始化每个 feature 为一个包含 tags 和 subtags 的对象
       features[feature] = {
           tags: tagsList.reduce((acc, tag) => {
-              acc[tag] = 0; // 默认值为0
+              acc[tag] = totalTags > 0 ? 1 / totalTags : 0; // 归一化到 [0,1]
               return acc;
           }, {}),
           subtags: subtagsList.reduce((acc, subtag) => {
-              acc[subtag] = 0; // 默认值为0
+              acc[subtag] = totalSubtags > 0 ? 1 / totalSubtags : 0; // 归一化到 [0,1]
               return acc;
           }, {})
       };
     });
 
-    // 设置 articleRecommend 对象
+    // 设置 articleRecommend 对象，这个得根据 defaultData.RECOMMENDATION_DATA_KEYS 来修改
     const articleRecommend = {
       RECOMMENDATION_VERSION: defaultData.RECOMMENDATION_VERSION,
       infoGroup: infoGroup,
       features: features,
-      recommendedIDs: []
+      recommendedArticles: recommendedArticles
     }
 
     // 写入本地数据 （保证格式）
@@ -138,17 +143,22 @@ Page({
   /**
    * 处理旧版本兼容
    */
-  async checkVersionUpdate() {
+  async checkVersionUpdate({ success } = {}) {
     // 判断旧版本
     if (defaultData.RECOMMENDATION_VERSION == this.data.articleRecommend.RECOMMENDATION_VERSION) {
       return;
     }
-
+  
     // 更新新版本 
     try {
       await this.initUserData();
       await this.uploadUserDataToCloud();
-      console.log('处理旧版本成功！')
+      console.log('处理旧版本成功！');
+      
+      // 调用 success 回调函数（如果提供）
+      if (typeof success === 'function') {
+        success();
+      }
     } catch (error) {
       console.error("更新新版本用户数据出错", error);
     }
@@ -170,15 +180,15 @@ Page({
 
     try {
       const currentTimestamp = Date.now();
-      const matchCondition = { 
-        _id: { $not: { $in: excludedIDs } },
-        ...(author !== "" && { author })
-      };
-
       const res = await db.collection(defaultData.ARTICLE_COLLECTION)
         .aggregate()
         // 1. 过滤作者，排除的ID
-        .match(matchCondition)
+        .match({ 
+          _id: { $not: { $in: excludedIDs } },
+          ...(author === "" 
+            ? { author: { $ne: defaultData.ARTICLE_AUTHORS[-1] } }
+            : { author })
+        })
   
         .addFields({
           // 2. 计算 tags 匹配比例的分数
@@ -230,6 +240,7 @@ Page({
       return res.list
     } catch (error) {
       console.error("获取文章时出错：", error);
+      return []
     }
   },
 
@@ -335,25 +346,63 @@ Page({
    */
   async getArticles(articleCount = 3){
     try {
+      // 获取用户推荐文章标签
       const tags = this.getRecommendationTags(2);
       const subtags = this.getRecommendationSubTags(2);
-      const excludedIDs = this.data.articleRecommend.recommendedIDs
+
+      // 获取用户已读文章并排除
+      const readIDs = Object.values(
+        this.data.articleRecommend.recommendedArticles
+      ).flat();
+
+      // 计算根据 author 数量分配对应数量文章的推荐
+      // 注：这块之后会根据 infoGroup 发生变动
+      const authorArticleCountRate = Object.fromEntries(
+        Object.entries(this.data.articleRecommend.recommendedArticles)
+          .filter(([key]) => key !== defaultData.ARTICLE_AUTHORS[-1])
+          .map(([key, articles]) => [
+            key,
+            (((articles.length + 1) / (Object.values(this.data.articleRecommend.recommendedArticles).flat().length + Object.keys(this.data.articleRecommend.recommendedArticles).length - 1 || 1)).toFixed(2)),
+          ])
+      );  
+      let totalAssignedArticles = 0;  
+      const authorGenerateArticleCount = Object.fromEntries(
+        Object.entries(
+          Object.fromEntries(
+            Object.entries(authorArticleCountRate).map(([key, rate]) => [
+              key,
+              Math.max(Math.round(rate * articleCount), Math.floor(articleCount * 0.2)), // 保证每个作者文章数不少于 20%
+            ])
+          )
+        ).map(([key, count], i, arr) => {
+          totalAssignedArticles += count;
+          if (totalAssignedArticles > articleCount) {
+            const diff = totalAssignedArticles - articleCount;
+            if (i === 0) {
+              return [key, count - diff];
+            }
+          }
+      
+          return [key, count];
+        })
+      );
 
       // 碳行家默认文章
       let articles = await this.fetchArticles({
         author: defaultData.ARTICLE_AUTHORS[-1]
       })
 
-      console.log(tags[0])
-
       // 普通文章推荐
-      articles = articles.concat(await this.fetchArticles({
-        tags: tags,
-        subtags: subtags,
-        geolocation: '',
-        excludedIDs: excludedIDs,
-        count: articleCount
-      }))
+      for (const [author, count] of Object.entries(authorGenerateArticleCount)) {
+        articles = articles.concat(await this.fetchArticles({
+          author: author,
+          tags: tags,
+          subtags: subtags,
+          geolocation: '', // TODO: 添加地域
+          excludedIDs: readIDs,
+          count: count
+        }));
+      }
 
       // 更新 articleShowList
       this.setData({
@@ -365,7 +414,9 @@ Page({
         UIArticleTags: [this.data.UIArticleTags[0], ...[...new Set(this.data.articleShowList.flatMap(a => (a.tags || []).filter(Boolean)))].sort()] 
       });      
 
-      console.log("文章分配成功：\n", articles)
+      console.log("文章分配成功：\n")
+      console.log(authorGenerateArticleCount)
+      console.log(articles)
     } catch(error) {
       console.error("分配文章失败: ", error)
     }
@@ -522,8 +573,18 @@ Page({
   /**
    * 下拉刷新
    */
-  onPullDownRefresh() {
-    
+  async onPullDownRefresh() {
+    // 获取文章
+    await this.getArticles(10);
+
+    // 更新 UI
+    this.bindSelectUITag({
+      currentTarget: {
+        dataset:{
+          tag: this.data.UIArticleTags[0]
+        }
+      }
+    })
   },
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
