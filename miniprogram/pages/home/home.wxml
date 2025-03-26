@@ -7,7 +7,11 @@
 
 <view class="selection-bar">
     <button class="tab {{activeTab === 'trip' ? 'active' : ''}}" bindtap="selectTab" data-tab="trip">出行</button>
-    <button class="tab {{activeTab === 'record' ? 'active' : ''}}" bindtap="selectTab" data-tab="record">记录</button>
+    
+    <button class="tab tab-record {{activeTab === 'record' ? 'active' : ''}}" bindtap="selectTab" data-tab="record">
+        <text>记录</text>
+        <view class="point" wx:if="{{showPoint}}"></view>
+    </button>
     <button class="tab {{activeTab === 'rank' ? 'active' : ''}}" bindtap="selectTab" data-tab="rank">排名</button>
 </view>
 
@@ -26,7 +30,7 @@
 
     <view wx:if="{{isTracking}}">
         <view class="record-container">
-            <text class="record-duration">{{ m1.convertStamp(duration, "duration") }}</text>
+            <text class="record-duration">{{ m1.convertTrackStamp(duration, "duration") }}</text>
             <text class="record-duration-label">记录时长</text>
             <text class="record-start">{{startNowTime}}</text>
             <text class="record-start-label">开始时间</text>
@@ -47,12 +51,18 @@
                 <view class="transport-method">{{ item.transport }}</view>
                 <view class="duration">时长: <text>{{ m1.convertStamp(item.endTime - item.date, "duration") }}</text></view>
                 <view class="carbon-saving">省碳量: <text>{{ item.carbSum }} g</text></view>
-                <view class="purpose">出行目的: <text>{{ item.purpose }}</text></view>
+                
+                <view class="point" wx:if="{{!item.purpose.length}}"></view>
+                <view wx:if="{{item.transport && item.purpose}}">
+                    <view class="purpose">出行方式: <text>{{ item.transport }}</text></view>
+                    <view class="purpose">出行目的: <text>{{ item.purpose }}</text></view>
+                </view>
+                <view wx:else class="purpose">记录提前终止</view>
             </view>
         </view>
     </view>
 
-            <view wx:if="{{!!showSchedules.length}}" class="schedules">
+        <view wx:if="{{!!showSchedules.length}}" class="schedules">
           <view class="heat-title">
             本次出行分析：
           </view>

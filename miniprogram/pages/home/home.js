@@ -113,11 +113,13 @@ Page({
     // 今日出行记录
     const {
       result: { showPoint, isRecordEmpty, list }
-    } = (await wx.cloud.callFunction({ name: "getLastTrack" })) || {};
+    } = (await wx.cloud.callFunction({ name: "getLastTrack", data: { showAll: true } })) || {};
 
+    getApp().globalData.showPoint = showPoint;
     // 行程百分比分析
     const { result: showSchedules } = (await wx.cloud.callFunction({ name: "getTrackRange", data: { list } })) || {};
     this.setData({ showPoint, showSchedules, todayRecordList: list.reverse(), isRecordEmpty });
+    this.getTabBar().setData({ showPoint })
     return list;
   },
   // Start recording 记录值

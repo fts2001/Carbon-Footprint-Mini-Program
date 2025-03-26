@@ -1,9 +1,32 @@
+var convertTrackStamp = function (stamp, type) {
+  if (stamp !== 0 && !stamp) {
+    return "（记录提前终止）";
+  }
+
+  // 直接使用 UTC 时间，不需要调整时区偏移
+  var time = getDate(stamp);
+  var hour = time.getUTCHours(); // 使用 UTC 小时
+  var minutes = time.getUTCMinutes(); // 使用 UTC 分钟
+  var secondes = time.getUTCSeconds(); // 使用 UTC 秒
+
+  // 格式化时间为两位数
+  hour = hour < 10 ? "0" + hour : hour;
+  minutes = minutes < 10 ? "0" + minutes : minutes;
+  secondes = secondes < 10 ? "0" + secondes : secondes;
+
+  return hour + ":" + minutes + ":" + secondes;
+};
+
 var convertStamp = function (stamp, type) {
   if (stamp !== 0 && !stamp) {
     return "（记录提前终止）";
   }
   if (type == "duration") {
-    stamp = stamp - 28800000;
+    // 获取当前时区偏移（单位：分钟）
+    var timezoneOffsetMinutes = getDate().getTimezoneOffset();
+    // 将分钟偏移转换为毫秒（注意符号相反）
+    var timezoneOffsetMilliseconds = -timezoneOffsetMinutes * 60 * 1000;
+    stamp = stamp - timezoneOffsetMilliseconds;
   }
   var time = getDate(stamp);
   // var year = time.getFullYear()
@@ -53,6 +76,7 @@ var getActiveClassName = function (arr, label) {
   return arr.indexOf(label) !== -1 ? "active" : "";
 };
 
+module.exports.convertTrackStamp = convertTrackStamp;
 module.exports.convertStamp = convertStamp;
 module.exports.classPicker = classPicker;
 module.exports.getTransportImage = getTransportImage;
