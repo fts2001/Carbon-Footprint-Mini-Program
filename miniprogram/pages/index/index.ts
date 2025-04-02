@@ -63,7 +63,7 @@ Page({
           url: `/pages/detail/detail?sharedFromID=${sharedFromid}&link=${options.articleLink}&articleType=${options.articleType}`
         });
       } else {
-        this.HandleSignIn();
+        this.handleSignIn();
       }
     } catch (err) {
       console.log(err);
@@ -107,7 +107,7 @@ Page({
   },
 
   // 注册
-  HandleSignUp() {
+  handleSignUp() {
     if (!this.isFetchingUserInfo && !this.isNavigating) {
       this.isFetchingUserInfo = true;
       this.onHandleSignUp();
@@ -148,18 +148,12 @@ Page({
   },
 
   // 登录
-  HandleSignIn() {
+  handleSignIn() {
     if (!this.isFetchingUserInfo && !this.isNavigating) {
       this.isFetchingUserInfo = true;
       onHandleSignIn({
         success: () => {
           this.isNavigating = true;
-          // wx.showToast({
-          //   title: "正在登录中",
-          //   icon: "loading",
-          //   mask: true,
-          //   duration: 500
-          // });
           setTimeout(() => {
             wx.reLaunch({
               url: `/pages/${this.FIRST_PAGE}/${this.FIRST_PAGE}`,
@@ -177,7 +171,7 @@ Page({
             showCancel: false
           });
           this.isFetchingUserInfo = false;
-          this.HandleSignUp();
+          this.handleSignUp();
         },
         error: () => {
           this.isFetchingUserInfo = false;
@@ -207,28 +201,6 @@ Page({
     }, 500);
   },
 
-  // 删除账户
-  onDeleteAccount() {
-    if (this.isFetchingUserInfo || this.isNavigating) {
-      return;
-    }
-
-    wx.showModal({
-      title: "请您确认",
-      content: "点击确认按钮注销小程序，反之请点击取消",
-      success: res => {
-        if (res.confirm) {
-          // TODO: 删除userinfo ??
-          wx.showToast({
-            title: "感谢使用碳行家",
-            icon: "success",
-            duration: 2000
-          });
-        }
-      }
-    });
-  },
-
   /**
    * 生命周期函数--监听页面显示
    */
@@ -238,26 +210,6 @@ Page({
     // 更新颜色
     updateColor();
   },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {},
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {},
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {},
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {},
 
   /**
    * 用户点击右上角分享

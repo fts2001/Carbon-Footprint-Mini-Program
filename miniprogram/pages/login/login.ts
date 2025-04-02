@@ -87,7 +87,7 @@ Page({
     });
   },
 
-  //单选按钮发生变化
+  // 单选按钮发生变化
   // radioChange(e) {
   //   console.log(e.detail.value);
   //   var sexName = this.data.isSex
@@ -214,7 +214,14 @@ Page({
   },
 
   login(e: any) {
-    if (!this.validateForm()) {
+    if (!this.validateForm() || app.globalData.userInfo) {
+      return;
+    }
+
+    // Lock for only input once
+    if (!this.login.lock) {
+      this.login.lock = true;
+    } else {
       return;
     }
 
@@ -251,7 +258,7 @@ Page({
     }
   },
 
-  uploadData: function (avatar: any, basicInfo: any, carbSum: any, testGroup: any) {
+  uploadData: function (avatar: any, basicInfo: any, carbSum: any, testGroup: any,) {
     wx.showToast({
       title: "正在登录",
       icon: "loading",
@@ -281,7 +288,7 @@ Page({
           if (res.result.success) {
             this.transferEntranceMoney({
               complete: () => {
-                wx.navigateTo({
+                wx.reLaunch({
                   url: "/pages/information/information"
                 });
               }
