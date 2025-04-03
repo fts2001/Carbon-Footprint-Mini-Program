@@ -42,30 +42,29 @@ exports.main = async (event, context) => {
     privateKey: fs.readFileSync('./apiclient_key.pem'), // 签名私钥
     serial_no:'14AD194FC3E19D5A880016589136D98B48A6B5BB',
     key:'CarbonCleverDukeKunshanCHANGLAB3'
-
   });
-
-  const outBatchNo = `batch${Date.now()}`;
-  const transferDetail = {
-    out_detail_no: `detail${Date.now()}`,
-    transfer_amount: money,
-    transfer_remark: transfer_remark,
-    openid: _openid
-  };
 
   const payload = {
     appid: appid,
-    out_batch_no: outBatchNo,
-    batch_name: batch_name,
-    batch_remark: batch_remark,
-    total_amount: money,
-    total_num: 1,
-    transfer_detail_list: [transferDetail]
+    out_bill_no: `bill${Date.now()}`,
+    transfer_scene_id: '1000',
+    openid: _openid,
+    transfer_amount: money,
+    transfer_remark: transfer_remark,
+    transfer_scene_report_infos: [{
+      info_type: "活动名称",
+      info_content: "注册现金奖励"
+    },{
+      info_type: "奖励说明",
+      info_content: `注册奖励现金${money / 100}元`
+    }]
   };
+
   const body = payload;
   const nonce_str = Math.random().toString(36).substr(2, 15);
   const timestamp = parseInt(+new Date() / 1000 + '').toString();
-  const url = '/v3/transfer/batches';
+  // const url = '/v3/transfer/batches'; // old API
+  const url = '/v3/fund-app/mch-transfer/transfer-bills';
   // const cert_url = '/v3/certificates'
   // // 获取签名
   const signature = wechatPayInstance.getSignature('POST', nonce_str,timestamp, url, body);
