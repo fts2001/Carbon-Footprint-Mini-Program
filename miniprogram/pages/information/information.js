@@ -74,7 +74,7 @@ Page({
 
       // 更新新数据和去除旧数据
       const updatedData = this.data.articleRecommend;
-      if (cloudData === {}) {
+      if (Object.keys(cloudData).length === 0) {
         await db.collection(defaultData.RECOMMENDATION_DATA_COLLECTION).add({
           data: updatedData
         });
@@ -538,7 +538,7 @@ Page({
     // TODO 这里继续
 
     // 构建URL
-    const url = `/pages/detail/detail?title=${title}&uploadTime=${uploadTime}&geolocation=${geolocation}&tags=${tags}&imgs=${imgs}&texts=${texts}`;
+    const url = `/pages/detail/detail?id=${articleID}&title=${title}&uploadTime=${uploadTime}&geolocation=${geolocation}&tags=${tags}&imgs=${imgs}&texts=${texts}`;
 
     // 导航到对应链接
     wx.navigateTo({
