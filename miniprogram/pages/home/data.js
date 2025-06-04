@@ -29,6 +29,7 @@ export default {
   curID: "",
   purpose: [],
   transport: [],
+  updating: false,
   transportList: ["步行或骑行", "公共交通", "电动汽车", "燃油汽车"],
   // purposes: [
   //   {

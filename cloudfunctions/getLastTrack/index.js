@@ -77,7 +77,7 @@ exports.main = async e => {
   } else limit = 10;
 
   let { data: lastTrack } = (await db.collection("track").where(where).orderBy("date", "desc").limit(limit).get()) || {};
-  showPoint = lastTrack.some(item => Array.isArray(item?.purpose) ? !item?.purpose?.length : !item?.purpose);
+  showPoint = lastTrack.some(item => (Array.isArray(item?.purpose) ? !item?.purpose?.length : !item?.purpose));
 
   if (!e.showAll) {
     if (!lastTrack.length) {
@@ -87,7 +87,7 @@ exports.main = async e => {
     } else {
       const abnormalRes = await findAbnormal(true);
       const abnormals = abnormalRes.data || [];
-      showPoint = !!abnormals.length
+      showPoint = !!abnormals.length;
     }
   }
 
@@ -107,6 +107,6 @@ exports.main = async e => {
     item["distance"] = parseFloat(dist.toFixed(2));
     item["carbSum"] = (item.carbSum || 0).toFixed(2);
   });
-  
+
   return { showPoint, isRecordEmpty, list: lastTrack };
 };

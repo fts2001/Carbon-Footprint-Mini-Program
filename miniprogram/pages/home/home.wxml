@@ -45,7 +45,7 @@
 <!-- when record -->
 <view wx:if="{{activeTab === 'record'}}">
     <view class="record-container">
-        <view wx:for="{{todayRecordList}}" wx:for-index="i" wx:key="i" class="listItem">
+        <view wx:for="{{todayRecordList}}" wx:for-index="i" wx:key="i" class="listItem" data-item="{{item}}" bindtap="onClickTrackCard">
             <image class="icon-placeholder" src="{{ m1.getTransportImage(item.calcTransport) }}" mode="aspectFit" />
             <view class="item-details">
                 <view class="transport-method">{{ item.transport }}</view>
