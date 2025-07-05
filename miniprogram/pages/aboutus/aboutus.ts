@@ -19,51 +19,9 @@ Page({
    * 生命周期函数--监听页面加载
    */
 
- onLoad(option) {
-    // AN EXAMPLE FOR USAGE OF TRANSFER API ( CLIENT -SIDE )
-    // const _openid = 'oo0IS5hNRHNDClFmgQRC8-4FeD8Q' 
-    // const money  = 100 
-    // const batch_name = '低碳奖励金'
-    // const batch_remark = 'transfer test'
-    // const transfer_remark = '低碳奖金'
-    // transfer({
-    //   money,
-    //   _openid,
-    //   batch_name,
-    //   batch_remark,
-    //   transfer_remark,
-    //   success: (result) => {
-    //     console.log('Transfer successful:', result);
-    //     wx.showModal({
-    //       title:'提现成功',
-    //       content: '恭喜发财，红包拿来',
-    //       showCancel:false
-    //     })
-    //   },
-    //   failed: (error) => {
-    //     console.log('Transfer failed:', error);
-    //     wx.showModal({
-    //       title:'出问题了',
-    //       content: error.message,
-    //       showCancel:false
-    //     })
-    //   },
-    //   error: (err) => {
-    //     console.log('Error during transfer:', err);
-    //     wx.showModal({
-    //       title:'出问题了',
-    //       content: err.message,
-    //       showCancel:false
-    //     })
-    //   }
-    // });
-
-    
+  onLoad(option) {
   },
   
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
 
 
   onShow() {

@@ -17,6 +17,7 @@
 
 /* Selection Bar */
 .selection-bar {
+  z-index: 22;
   position: absolute;
   top: calc(15% - 5%); // Adjust to overlap by half its height
   left: 50%;
@@ -40,6 +41,20 @@
     font-size: 16px;
     background-color: #ffffff;
     color: #000000;
+    z-index: 88;
+
+    &-record{
+      position: relative;
+      .point {
+        width: 24rpx;
+        height: 24rpx;
+        border-radius: 50%;
+        position: absolute;
+        right: 10rpx;
+        top: 10rpx;
+        background-color: red;
+      }
+    }
 
     &.active {
       background-color: #ffd700; // Gold color for active tab
@@ -266,7 +281,7 @@
 .listItem {
   display: flex; // Use flexbox for layout
   width: 90%; // Full width for each item
-  height: 200rpx; // Set a fixed height for each item
+  // height: 200rpx; // Set a fixed height for each item
   padding: 10rpx; // Padding for the item
   margin-top: 20rpx;
   margin-bottom: 20rpx; // Space between items
@@ -277,7 +292,7 @@
 
 .icon-placeholder {
   width: 20%; // 20% of the item width
-  height: 80%; // 80% of the item height
+  height: 100px; // 80% of the item height
   margin-top: 5%;
   margin-right: 10rpx; // Space between icon and text
   border-radius: 5rpx; // Rounded corners for the icon
@@ -289,12 +304,23 @@
 .item-details {
   flex: 1; // Take the remaining space
   display: flex;
+  position: relative;
   flex-direction: column; // Arrange details in a column
   justify-content: center; // Center items vertically
+
+  .point {
+    width: 24rpx;
+    height: 24rpx;
+    border-radius: 50%;
+    position: absolute;
+    right: 10rpx;
+    top: 10rpx;
+    background-color: red;
+  }
 }
 
 .duration, .carbon-saving, .purpose {
-  font-size: 28rpx; // Adjust font size as needed
+  font-size: 26rpx; // Adjust font size as needed
   color: black; // Text color
   margin: 2rpx 0; // Spacing between rows
 }

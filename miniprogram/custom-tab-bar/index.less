@@ -23,11 +23,22 @@
 
 .tab-bar-item {
   flex: 1;
+  position: relative;
   text-align: center;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
+
+  .point{
+    width: 24rpx;
+    height: 24rpx;
+    border-radius: 50%;
+    position: absolute;
+    right: 40rpx;
+    top: 10rpx;
+    background-color: red;
+  }
 }
 
 .tab-bar-item image {

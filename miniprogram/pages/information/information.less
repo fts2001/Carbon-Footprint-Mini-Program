@@ -110,11 +110,16 @@
   height: auto;
   width: 100%;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-evenly;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  white-space: nowrap;
   gap: 8rpx;
   margin-top: 1.5%;
+  padding-bottom: 3%;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
 }
+
 
 .horizontal-tag {
   height: 50rpx;
@@ -139,7 +144,7 @@
 .vertical-articles-container {
   height: auto;
   width: 100%;
-  margin-top: 5%;
+  margin-top: 1%;
 }
 
 .vertical-article {

@@ -16,6 +16,7 @@ Page({
 
     /** 文章模板 */
     article: {
+      id: '',
       title: "标题模板",
       geolocation: "全国",
       uploadTime: "2024-11-11 11:11:11",
@@ -36,6 +37,7 @@ Page({
     const openTime  = new Date()
 
     // 文章属性解包
+    const id = decodeURIComponent(options.id || '')
     const title = decodeURIComponent(options.title || '');
     const uploadTime = decodeURIComponent(options.uploadTime || '');
     const geolocation = decodeURIComponent(options.geolocation || '');
@@ -54,6 +56,7 @@ Page({
 
       // 文章
       article: {
+        id: id,
         title: title,
         geolocation: geolocation,
         uploadTime: uploadTime,
@@ -80,23 +83,22 @@ Page({
     // 计算阅读时间
     const endTime = new Date()
     const startTime = new Date(this.data.openTime)
-    const timeDifference = endTime.valueOf() - startTime.valueOf();
-
-    // TODO 上传阅读记录在数据库
+    
     // 更新云端阅读记录
-    // try {
-    //   db.collection('readHistory').add({
-    //     data:{
-    //       startTime: startTime,
-    //       endTime: endTime,
-    //       link: this.data.link,
-    //       scrollAmount: this.data.scrollAmount ?? null,
-    //       sharedFromID: this.data.sharedFromID ?? null
-    //     }
-    //   })
-    // } catch(err) {
-    //   console.log("文章阅读记录失败：" + err)
-    // }
+    try {
+      db.collection('readHistory').add({
+        data:{
+          startTime: startTime,
+          endTime: endTime,
+          articleID: this.data.article.id,
+          sharedFromID: this.data.sharedFromID ?? null
+        }
+      })
+
+      console.log("成功记录文章阅读")
+    } catch(err) {
+      console.log("文章阅读记录失败：" + err)
+    }
     
   },
 

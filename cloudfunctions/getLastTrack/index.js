@@ -3,7 +3,6 @@ const cloud = require("wx-server-sdk");
 // Initialize cloud
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-
 const db = cloud.database();
 const _ = db.command;
 
@@ -60,35 +59,36 @@ async function findAbnormal(isTotal = false) {
       purpose: db.command.exists(false)
     })
     .orderBy("date", "desc")
-    .limit(1)
+    .limit(10)
     .get();
 }
 
-exports.main = async () => {
+exports.main = async e => {
   const { OPENID } = cloud.getWXContext();
   const now = todayStartDate();
   let isRecordEmpty = false;
   let showPoint = false;
 
-  let { data: lastTrack } =
-    (await db
-      .collection("track")
-      .where({ _openid: OPENID, date: db.command.gt(now) })
-      .orderBy("date", "desc")
-      .limit(1)
-      .get()) || {};
+  let limit = 1;
+  const where = { _openid: OPENID };
 
+  if (!e.showAll) {
+    where.date = db.command.gt(now);
+  } else limit = 10;
 
-      console.log(lastTrack, OPENID)
+  let { data: lastTrack } = (await db.collection("track").where(where).orderBy("date", "desc").limit(limit).get()) || {};
+  showPoint = lastTrack.some(item => (Array.isArray(item?.purpose) ? !item?.purpose?.length : !item?.purpose));
 
-  if (!lastTrack.length) {
-    const res = await findAbnormal();
-    lastTrack = res.data
-    isRecordEmpty = true
-  } else {
-    const abnormalRes = await findAbnormal(true);
-    const abnormals = abnormalRes.data || [];
-    showPoint = abnormals.length;
+  if (!e.showAll) {
+    if (!lastTrack.length) {
+      const res = await findAbnormal();
+      lastTrack = res.data;
+      isRecordEmpty = true;
+    } else {
+      const abnormalRes = await findAbnormal(true);
+      const abnormals = abnormalRes.data || [];
+      showPoint = !!abnormals.length;
+    }
   }
 
   lastTrack.forEach(item => {

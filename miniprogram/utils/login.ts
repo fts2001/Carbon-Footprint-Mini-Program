@@ -82,7 +82,7 @@ async function onHandleSignIn({
       const userInfoQuery = await db.collection('userInfo')
         .where({ _openid: openID })
         .get();
-      
+
       // 成功获取账号
       if (userInfoQuery.data.length === 1) {
         app.globalData.userInfo = userInfoQuery.data[0];

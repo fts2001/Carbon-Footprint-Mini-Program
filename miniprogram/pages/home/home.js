@@ -54,34 +54,6 @@ Page({
       });
     });
   },
-
-  // Travel mode selection
-
-  bindPickerChange(e) {
-    this.setData({ endIndex: e.detail.value, transport: e.detail.value });
-  },
-  // 出行目的选择事件
-  bindPurposeChange(e) {
-    this.setData({ purpose: e.detail.value });
-  },
-  onClickTrackCard() {
-    wx.navigateTo({ url: "/pages/track/track" });
-  },
-  transporModalCancel() {
-    this.resetSelector();
-    this.setData({ transporModalHidden: true });
-  },
-  transporModalConfirm() {
-    if (!this.data.endTransportList.length && !this.data.purposes.length) return wx.showToast({ title: "请至少选择一项" });
-    this.resetSelector();
-    this.setData({ transporModalHidden: true });
-    this.endTrack();
-  },
-  resetSelector() {
-    const reasetEndTransportList = this.data.endTransportList.map(item => ({ ...item, checked: false }));
-    const reasetPurposesList = this.data.purposes.map(item => ({ ...item, checked: false }));
-    this.setData({ endTransportList: reasetEndTransportList, purposes: reasetPurposesList });
-  },
   // 记录前隐私调用准备 弹窗
   async checkSetting(autoStart) {
     const settingRes = await wx.getSetting();
@@ -90,8 +62,6 @@ Page({
       await wx.openSetting();
     } else {
       autoStart && this.onTrack();
-
-      // 如果需要使用，解开注释 未验证是否可运行，云函数setweather问题请联系yuandong处理
       wx.getLocation({
         type: "gcj02",
         success: async loc => {
@@ -113,11 +83,13 @@ Page({
     // 今日出行记录
     const {
       result: { showPoint, isRecordEmpty, list }
-    } = (await wx.cloud.callFunction({ name: "getLastTrack" })) || {};
+    } = (await wx.cloud.callFunction({ name: "getLastTrack", data: { showAll: true } })) || {};
 
+    getApp().globalData.showPoint = showPoint;
     // 行程百分比分析
     const { result: showSchedules } = (await wx.cloud.callFunction({ name: "getTrackRange", data: { list } })) || {};
     this.setData({ showPoint, showSchedules, todayRecordList: list.reverse(), isRecordEmpty });
+    this.getTabBar().setData({ showPoint });
     return list;
   },
   // Start recording 记录值
@@ -143,11 +115,12 @@ Page({
     });
   },
   onClickEvent() {
+    if (this.data.updating) return wx.showToast({ title: "正在更新中，请勿重复操作!", icon: "none", duration: 2000 });
+
     if (this.data.userInfo != null) {
       if (!this.data.recordStatus) {
         this.setData({ startNowTime: getNowTime() });
         this.checkSetting(true);
-        // requestSubs();
       } else {
         wx.showModal({
           title: "提示",
@@ -209,7 +182,7 @@ Page({
     // 该方法不支持Promise，仅支持回调
     wx.getWeRunData({
       complete: async res => {
-        this.setData({ isTracking: false });
+        this.setData({ isTracking: false, updating: true });
         const { result: resp = null } = (await wx.cloud.callFunction({ name: "echo", data: { info: wx.cloud.CloudID(res.cloudID) } })) || {};
         const stepList = resp.info.data ? resp.info.data.stepInfoList : null;
 
@@ -251,12 +224,17 @@ Page({
           });
         } catch (e) {
           console.error("Caught error:", e);
+        } finally {
+          setTimeout(() => {
+            _this.setData({ updating: false });
+          }, 500);
         }
 
         if (trackRes.stats.updated == 1) {
           console.log("行程记录成功！", trackRes);
           wx.showToast({ title: "行程记录成功!", icon: "success", duration: 2000 });
           clearInterval(_this.data.myTimer);
+
           _this.setData({
             startTime: 0,
             endTime: 0,
@@ -273,23 +251,6 @@ Page({
           _this.refreshLastTrack();
           _this.onTransportModalClose();
           _this.onPurposeModalClose();
-
-          // 方案一，根据省碳计算
-          // const { can, credit } = await calcCredit(carbSum)
-          // const params = can ? { credit, carbon: carbSum } : { carbon: carbSum }
-          // wx.cloud.callFunction({
-          //   name: "updateUserInfo",
-          //   data: params
-          // });
-
-          // 方案二，根据每日上限
-          // const { can, credit } = await calcDayCredit()
-          // const params = can ? { credit, carbon: carbSum } : { carbon: carbSum }
-          // wx.cloud.callFunction({
-          //   name: "updateUserInfo",
-          //   data: params
-          // });
-
           wx.cloud.callFunction({
             name: "updateUserInfo",
             data: {
@@ -331,18 +292,10 @@ Page({
     console.log(endTime);
     this.setData({
       curID: _id,
-      // isTracking: !endTime,
       index: userInfoRes.data[0].basicInfo.trans,
       defaultIndex: userInfoRes.data[0].basicInfo.trans
     });
-    // this.setData({
-    //   curID: track[0]._id,
-    //   isTracking: !track[0].endTime,
-    //   index: userInfoRes.data[0].basicInfo.trans,
-    //   defaultIndex: userInfoRes.data[0].basicInfo.trans
-    // });
   },
-  onReady() {},
 
   onLoad(options) {
     // 转发朋友圈链接，导航到登录页面
@@ -356,9 +309,7 @@ Page({
   onShow() {
     this.getTabBar();
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 0
-      });
+      this.getTabBar().setData({ selected: 0 });
     }
     // 朋友圈进来则不显示
     if (this.data.isFromShareTimeline) return;
@@ -419,15 +370,10 @@ Page({
       path: `/pages/index/index?sharedFromID=${app.globalData.openID}`
     };
   },
-
   //  functions for new UI starts here
   selectTab(event) {
-    const selectedTab = event.currentTarget.dataset.tab;
-    this.setData({
-      activeTab: selectedTab
-    });
+    this.setData({ activeTab: event.currentTarget.dataset.tab });
   },
-
   onClickTransportation(e) {
     const arr = this.data.transport;
     const index = arr.indexOf(e.currentTarget.dataset.tp);
@@ -472,6 +418,16 @@ Page({
   onConfirmPurpose() {
     if (!this.data.purpose.length) return wx.showToast({ icon: "none", title: "请选择出行方式" });
     this.setData({ showPurposes: false });
+    this.finishAndEndTrack();
+  },
+  onClickTrackCard(e) {
+    const { currentTarget } = e || {};
+    const { dataset } = currentTarget || {};
+    const { item: currentItem } = dataset || {};
+    if ((Array.isArray(currentItem?.purpose) && !!currentItem?.purpose?.length) || (!Array.isArray(currentItem?.purpose) && currentItem?.purpose))
+      return;
+
+    this.setData({ curID: currentItem._id });
     this.finishAndEndTrack();
   }
 });

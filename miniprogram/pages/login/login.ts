@@ -87,7 +87,7 @@ Page({
     });
   },
 
-  //单选按钮发生变化
+  // 单选按钮发生变化
   // radioChange(e) {
   //   console.log(e.detail.value);
   //   var sexName = this.data.isSex
@@ -214,7 +214,14 @@ Page({
   },
 
   login(e: any) {
-    if (!this.validateForm()) {
+    if (!this.validateForm() || app.globalData.userInfo) {
+      return;
+    }
+
+    // Lock for only input once
+    if (!this.login.lock) {
+      this.login.lock = true;
+    } else {
       return;
     }
 
@@ -251,7 +258,7 @@ Page({
     }
   },
 
-  uploadData: function (avatar: any, basicInfo: any, carbSum: any, testGroup: any) {
+  uploadData: function (avatar: any, basicInfo: any, carbSum: any, testGroup: any,) {
     wx.showToast({
       title: "正在登录",
       icon: "loading",
@@ -281,7 +288,7 @@ Page({
           if (res.result.success) {
             this.transferEntranceMoney({
               complete: () => {
-                wx.navigateTo({
+                wx.reLaunch({
                   url: "/pages/information/information"
                 });
               }
@@ -302,19 +309,18 @@ Page({
 
       const _openid = app.globalData.openID;
       const active = transferMoney.active;
-      const batch_name = "碳行家奖励金";
       const money = transferMoney.entrance.money;
-      const batch_remark = transferMoney.entrance.remark;
-      const transfer_remark = transferMoney.entrance.info;
+      const remark = transferMoney.entrance.info;
 
+      // 启用
       if (active) {
         await transfer({
           money,
+          remark,
           _openid,
-          batch_name,
-          batch_remark,
-          transfer_remark,
-          success: result => {
+
+          // 发放成功回调
+          success: (result: any) => {
             console.log("Transfer successful:", result);
             wx.hideToast();
             wx.showModal({
@@ -326,7 +332,7 @@ Page({
               }
             });
           },
-          failed: error => {
+          failed: (error: { message: any; }) => {
             console.log("Transfer failed:", error);
             wx.hideToast();
             wx.showModal({
@@ -338,7 +344,7 @@ Page({
               }
             });
           },
-          error: err => {
+          error: (err: { message: any; }) => {
             console.log("Error during transfer:", err);
             wx.hideToast();
             wx.showModal({
@@ -351,6 +357,8 @@ Page({
             });
           }
         });
+
+      // 未启用
       } else {
         wx.hideToast();
         wx.showModal({
