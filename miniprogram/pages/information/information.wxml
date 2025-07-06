@@ -8,7 +8,13 @@
 
 <!-- 文章前端显示 -->
 <block wx:else>
-  <view class="page-background" style="background: {{background}};">
+  <scroll-view
+    class="page-background"
+    scroll-y="true"
+    bindscrolltolower="onScrollToLower"
+    lower-threshold="50"
+    style="background: {{background}};"
+  >
     <!-- 标题 -->
     <view class="title-box">
       <view class="title-text">
@@ -36,14 +42,14 @@
       <!-- 分格线 -->
       <view class="horizontal-line" />
 
-      <!-- 标签筛选 -->
-      <view class="horizontal-tags-container">
+      <!-- 标签筛选，目前禁用 -->
+      <!-- <view class="horizontal-tags-container">
         <view wx:for="{{UIArticleTags}}" wx:for-index="i" wx:key="i" class="horizontal-tag {{UISelectedTag === item ? 'active' : ''}}" bindtap="bindSelectUITag" data-tag="{{item}}">{{item}}</view>
-      </view>
+      </view> -->
 
       <!-- 标签文章分类 -->
       <view class="vertical-articles-container">
-        <view wx:for="{{articleShowList}}" wx:for-index="i" wx:key="i" class="vertical-article {{item.isUnread ? 'highlight' : ''}}" bindtap="bindClickArticle" data-id="{{item._id}}" wx:if="{{item.isTagShow}}"> 
+        <view wx:for="{{articleShowList}}" wx:for-index="i" wx:key="i" class="vertical-article {{item.isUnread ? 'highlight' : ''}}" bindtap="bindClickArticle" data-id="{{item._id}}" wx:if="{{item.isTagShow}}">
           <view class="article-text">
             <view class="circle">{{item.geolocation}}</view>
             <view class="title">{{item.title}}</view>
@@ -59,9 +65,9 @@
       </view>
     </view>
 
-    
-  </view>
+  </scroll-view>
 </block>
+
 
 
 <tab-bar id="tabBar"></tab-bar>
