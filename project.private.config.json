@@ -4,7 +4,7 @@
     "urlCheck": false,
     "compileHotReLoad": false
   },
-  "libVersion": "3.2.1",
+  "libVersion": "3.8.7",
   "projectname": "CarbonFootprint",
   "condition": {
     "miniprogram": {
