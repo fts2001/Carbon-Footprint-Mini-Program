@@ -97,7 +97,32 @@ Page({
     }
   },
 
-    /**
+  /**
+   * 上传一次推荐的文章的 ID 到数据库记录
+   * @param {*} articleIDs 此次推荐的所有文章的 ID 列表
+   */
+  async uploadUserRecommendHistory(articleIDs) {
+    try {
+      const recommendTime = new Date(); // 当前时间戳
+      const currentFeatures = this.data.articleRecommend.features; // 本次推荐后的特征分数
+      const currentReadArticles = this.data.articleRecommend.recommendedArticles; // 截至这次推荐已经读过的文章
+
+      await db.collection(defaultData.RECOMMENDATION_HISTORY_COLLECTION).add({
+        data: {
+          articleIDs: articleIDs,
+          recommendTime: recommendTime,
+          currentFeatures: currentFeatures,
+          currentReadArticles: currentReadArticles
+        }
+      });
+
+      console.log("成功记录此次推荐");
+    } catch (err) {
+      console.error("此次推荐记录失败：" + err);
+    }
+  },
+
+  /**
    * 初始化用户的云端 articleRecommend 数据（Note: 这里应该根据版本改变发生变动）
    */
   async initUserData() {
@@ -481,6 +506,9 @@ Page({
       }
       normalArticles.sort(() => Math.random() - 0.5)
 
+      // 记录此次推荐
+      await this.uploadUserRecommendHistory(normalArticles.map(item => item._id))
+
       // 添加新增文章到末尾
       const articles = this.data.articleShowList.concat(normalArticles);
       this.setData({
@@ -578,7 +606,7 @@ Page({
     wx.showLoading({ title: '加载文章中...', mask: true });
   
     try {
-      console.log('开始加载文章');
+      console.log('推荐新文章中...');
       await this.getArticles(10);
   
       // 更新 UI 标签（选择第一个'综合'标签）
