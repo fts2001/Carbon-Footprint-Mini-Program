@@ -16,6 +16,7 @@ Page({
 
     /** 页面基本信息 */
     background: null,
+    isLoading: false,
 
     /** UI 相关 */
     UISelectedTag: '',
@@ -180,6 +181,7 @@ Page({
     subtags = [], 
     geolocation = "", 
     excludedIDs = [], 
+    readIDs = [],
     count = 10 
   }) {
     const $ = db.command.aggregate;
@@ -220,7 +222,12 @@ Page({
               // 30天以后 0
               0
             ])
-          ])
+          ]),
+
+          // 6. 曾经阅读过的文章扣分（不那么容易被推荐）
+          readPenaltyScore: $.cond(
+            [$.in(["$_id", readIDs]), defaultData.ARTICLE_WEIGHT_SCORES.READ, 0]
+          )
         })
 
         // 6. 统计所有分数
@@ -229,7 +236,8 @@ Page({
             "$tagsIntersectionScore",
             "$subtagsIntersectionScore",
             "$geolocationScore",
-            "$uploadTimeScore"
+            "$uploadTimeScore",
+            "$readPenaltyScore"
           ])
         })
   
@@ -445,18 +453,16 @@ Page({
       const tags = this.getRecommendationTags(2);
       const subtags = this.getRecommendationSubTags(2);
 
-      // 获取用户已读文章并排除
+      // 获取用户已显示文章并排除
+      const shownIDs = this.data.articleShowList.map(item => item._id);
+
+      // 获取用户已读文章
       const readIDs = Object.values(
         this.data.articleRecommend.recommendedArticles
       ).flat();
 
       // 获取根据 author 数量动态分配对应数量文章的推荐
       const authorCountPair = this.getAuthorGenerateArticleCount(articleCount)
-
-      // 碳行家默认文章
-      let carbonArticles = await this.fetchArticles({
-        author: defaultData.ARTICLE_AUTHORS[-1]
-      })
 
       // 普通文章推荐，并随机 shuffle 排序
       let normalArticles = []
@@ -467,27 +473,28 @@ Page({
             tags: tags,
             subtags: subtags,
             geolocation: '', // TODO: 添加地域
-            excludedIDs: readIDs,
+            excludedIDs: shownIDs,
+            readIDs: readIDs,
             count: count
           }))
         );
       }
       normalArticles.sort(() => Math.random() - 0.5)
 
-      // 更新 articleShowList
-      let articles = carbonArticles.concat(normalArticles)
+      // 添加新增文章到末尾
+      const articles = this.data.articleShowList.concat(normalArticles);
       this.setData({
         articleShowList: articles
-      })
+      });
 
       // 更新 UIArticleTags
       this.setData({ 
         UIArticleTags: [this.data.UIArticleTags[0], ...[...new Set(this.data.articleShowList.flatMap(a => (a.tags || []).filter(Boolean)))].sort()] 
       });      
 
-      console.log("文章分配成功：\n")
-      console.log(authorCountPair)
-      console.log(articles)
+      console.log("文章分配成功\n")
+      // console.log(authorCountPair)
+      // console.log(articles)
     } catch(error) {
       console.error("分配文章失败: ", error)
     }
@@ -564,11 +571,31 @@ Page({
   /**
    * UI 的自定义滚动触底事件
    */
-  onScrollToLower() {
-    console.log('滚动到底了');
-    wx.showToast({ title: '滚动到底了', icon: 'none' });
-
-    // TODO：加载更多的逻辑
+  async onScrollToLower() {
+    if (this.data.isLoading) return; // 防止多次触发
+  
+    this.setData({ isLoading: true });
+    wx.showLoading({ title: '加载文章中...', mask: true });
+  
+    try {
+      console.log('开始加载文章');
+      await this.getArticles(10);
+  
+      // 更新 UI 标签（选择第一个'综合'标签）
+      this.bindSelectUITag({
+        currentTarget: {
+          dataset: {
+            tag: this.data.UIArticleTags[0]
+          }
+        }
+      });
+    } catch (e) {
+      console.error('加载文章失败', e);
+      wx.showToast({ title: '加载失败', icon: 'none' });
+    } finally {
+      wx.hideLoading()
+      this.setData({ isLoading: false });
+    }
   },
 
   ///////////////////////////////////////////////////////////////////////
@@ -579,13 +606,22 @@ Page({
    * 初始化本页面数据
    */
   async initData(){
+    this.setData({ isLoading: true })
+
     // 获取用户云端数据
     await this.fetchUserCloudFromData();
 
     // 检查版本更新
     await this.checkVersionUpdate();
 
-    // 获取文章
+    // 初始化填充碳行家文章
+    this.setData({
+      articleShowList: await this.fetchArticles({
+        author: defaultData.ARTICLE_AUTHORS[-1]
+      })
+    });
+
+    // 初始推荐 10 篇文章
     await this.getArticles(10);
 
     // 更新 UI
@@ -596,6 +632,8 @@ Page({
         }
       }
     })
+
+    this.setData({ isLoading: false })
   },
 
   ///////////////////////////////////////////////////////////////////////////
@@ -657,23 +695,6 @@ Page({
     // 设置标题栏
     wx.setNavigationBarTitle({
       title: '碳行家｜信息中心'
-    })
-  },
-
-  /**
-   * 下拉刷新
-   */
-  async onPullDownRefresh() {
-    // 获取文章
-    await this.getArticles(10);
-
-    // 更新 UI
-    this.bindSelectUITag({
-      currentTarget: {
-        dataset:{
-          tag: this.data.UIArticleTags[0]
-        }
-      }
     })
   },
 

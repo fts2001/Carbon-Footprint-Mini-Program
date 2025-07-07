@@ -40,10 +40,11 @@ export default {
 
   /** 文章推荐分数权重 */
   ARTICLE_WEIGHT_SCORES: {
-    'TAG': 5,
-    'SUBTAG': 5,
-    'GEOLOCATION': 2,
-    'TIME': 3
+    'TAG': 4,
+    'SUBTAG': 4,
+    'GEOLOCATION': 3,
+    'TIME': 3,
+    'READ': -6
   },
 
   /** 文章种类对应的 tags （这个会显示） */

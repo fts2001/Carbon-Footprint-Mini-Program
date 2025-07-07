@@ -24,9 +24,9 @@
 
     <!-- 文章填充框 -->
     <view class="articles-container">
-      <!-- 推荐文章副标题 -->
+      <!-- 收藏文章副标题 -->
       <view class="subtitle-recommend">
-        <text>推荐文章</text>
+        <text>收藏文章</text>
       </view>
 
       <!-- 推荐文章 -->
@@ -46,6 +46,11 @@
       <!-- <view class="horizontal-tags-container">
         <view wx:for="{{UIArticleTags}}" wx:for-index="i" wx:key="i" class="horizontal-tag {{UISelectedTag === item ? 'active' : ''}}" bindtap="bindSelectUITag" data-tag="{{item}}">{{item}}</view>
       </view> -->
+
+      <!-- 推荐文章副标题 -->
+      <view class="subtitle-recommend">
+        <text>推荐文章</text>
+      </view>
 
       <!-- 标签文章分类 -->
       <view class="vertical-articles-container">
