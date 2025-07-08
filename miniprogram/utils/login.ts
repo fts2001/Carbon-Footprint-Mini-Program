@@ -83,6 +83,7 @@ async function onHandleSignIn({
         .where({ _openid: openID })
         .get();
 
+      console.log("我的用户信息",userInfoQuery);
       // 成功获取账号
       if (userInfoQuery.data.length === 1) {
         app.globalData.userInfo = userInfoQuery.data[0];

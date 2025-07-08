@@ -1,38 +1,34 @@
-
-
-
-
-<view class="page-background">
+<view class="page-background" wx:if="{{false}}">
   <view>
     <modal title="知情同意" confirm-text="同意" cancel-text="取消" hidden="{{modalHidden}}" bindconfirm="modalConfirm" bindcancel="modalCancel">
-    <scroll-view scroll-y="true"  style="height:300px ; text-align: center;">
-    <text>\n隐私声明
+      <scroll-view scroll-y="true" style="height:300px ; text-align: center;">
+        <text>\n隐私声明
 
-一、前言\n
+          一、前言\n
 
-欢迎使用“碳行家”，这是一款专注于个人碳足迹可视化的小程序。作为开发者，我们深知信息安全的重要性。此声明旨在帮助您了解我们如何收集、使用、存储和保护您的个人信息。\n
+          欢迎使用“碳行家”，这是一款专注于个人碳足迹可视化的小程序。作为开发者，我们深知信息安全的重要性。此声明旨在帮助您了解我们如何收集、使用、存储和保护您的个人信息。\n
 
-二、信息收集\n
+          二、信息收集\n
 
-本小程序在运行过程中收集的位置信息数据均为匿名采集。实验结束后，我们将全部销毁。在任何情况下，我们都不会将采集到的信息提供给任何第三方。\n
+          本小程序在运行过程中收集的位置信息数据均为匿名采集。实验结束后，我们将全部销毁。在任何情况下，我们都不会将采集到的信息提供给任何第三方。\n
 
-三、合规性\n
+          三、合规性\n
 
-本小程序已经昆山杜克大学研究伦理委员会审查通过，符合学术研究规范要求。\n
+          本小程序已经昆山杜克大学研究伦理委员会审查通过，符合学术研究规范要求。\n
 
-四、遵守规定\n
+          四、遵守规定\n
 
-本小程序严格遵守微信小程序开发、运营规则，确保所有活动操作在合法、规范的范围内进行。\n
+          本小程序严格遵守微信小程序开发、运营规则，确保所有活动操作在合法、规范的范围内进行。\n
 
-五、咨询与反馈\n
+          五、咨询与反馈\n
 
-如您对我们的隐私声明有任何疑问或需要提供任何反馈，欢迎随时与我们联系。\n
-联系方式：yucen.xiao@dukekunshan.edu.cn \n
+          如您对我们的隐私声明有任何疑问或需要提供任何反馈，欢迎随时与我们联系。\n
+          联系方式：yucen.xiao@dukekunshan.edu.cn \n
 
-感谢您的信任，我们会竭尽全力守护信息安全。
-    </text>
-    </scroll-view>
-    </modal> 
+          感谢您的信任，我们会竭尽全力守护信息安全。
+        </text>
+      </scroll-view>
+    </modal>
   </view>
 
   <view style="font-size:50rpx; padding: 20rpx; color: white;text-align: center; border-bottom: 5rpx solid #a5a4a4;">欢迎您使用低碳出街小助手！请完成注册开始您的低碳之旅</view>
@@ -41,31 +37,32 @@
     <!-- <text>基本信息</text> -->
   </view>
 
-<form bindsubmit="login" wx:if="{{modalHidden}}">
+  <form bindsubmit="login" wx:if="{{modalHidden}}">
 
-<view class='list'>
-<view class="name">
-  <text>点击右侧选择头像</text>
-  <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" value = "{{ avatarUrl }}" name = "avatar">
+    <view class='list'>
+      <view class="name">
+        <text>点击右侧选择头像</text>
+        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" value="{{ avatarUrl }}" name="avatar">
 
-  <image class="avatar" src="{{avatarUrl}}"></image>
-</button> </view>
+          <image class="avatar" src="{{avatarUrl}}"></image>
+        </button>
+      </view>
 
- <view class="name">
- <text>昵称</text>
-  <input type="nickname" placeholder-style="color:white" placeholder="此处输入昵称" name = "nickname" bindinput="bindnamechange" value="{{ nickname }}"/> 
- </view>
+      <view class="name">
+        <text>昵称</text>
+        <input type="nickname" placeholder-style="color:white" placeholder="此处输入昵称" name="nickname" bindinput="bindnamechange" value="{{ nickname }}" />
+      </view>
 
- <!-- <view class='sex'>
-    <text>性别</text>
-    <radio-group class="radio-group" bindchange="radioChange" name="sex">
-      <label class="radio" wx:for="{{sex}}" wx:key="index">
-        <radio value="{{item.name}}" checked="{{item.checked}}"/>{{item.value}}
-      </label>
-    </radio-group>
-  </view> -->
+      <!-- <view class='sex'>
+        <text>性别</text>
+        <radio-group class="radio-group" bindchange="radioChange" name="sex">
+          <label class="radio" wx:for="{{sex}}" wx:key="index">
+            <radio value="{{item.name}}" checked="{{item.checked}}" />{{item.value}}
+          </label>
+        </radio-group>
+      </view> -->
 
- <!-- <view class='name'>
+      <!-- <view class='name'>
    <text>年龄</text>
    <picker bindchange = "bindDobChange" value = "{{ dob }}" range = "{{ dobarr }}" name = "dob">
    <view wx:if = "{{ dob }}">
@@ -125,10 +122,104 @@
     
    </picker>
   </view> -->
+    </view>
+
+    <button form-type='submit' class="submit" style="margin-bottom: 100rpx; margin-top: 50rpx;">提交</button>
+  </form>
+
+  <van-dialog id="van-dialog" custom-class="login-dialog" />
 </view>
 
-<button form-type='submit' class="submit" style="margin-bottom: 100rpx; margin-top: 50rpx;">提交</button>
-</form>
+<!-- 新的注册页面 -->
+<view style="height: 100vh;">
+  <view>
+    <modal title="知情同意" confirm-text="同意" cancel-text="取消" hidden="{{modalHidden}}" bindconfirm="modalConfirm" bindcancel="modalCancel">
+      <scroll-view scroll-y="true" style="height:300px ; text-align: center;">
+        <text>\n隐私声明
 
-   <van-dialog id="van-dialog" custom-class="login-dialog" />
+          一、前言\n
+
+          欢迎使用“碳行家”，这是一款专注于个人碳足迹可视化的小程序。作为开发者，我们深知信息安全的重要性。此声明旨在帮助您了解我们如何收集、使用、存储和保护您的个人信息。\n
+
+          二、信息收集\n
+
+          本小程序在运行过程中收集的位置信息数据均为匿名采集。实验结束后，我们将全部销毁。在任何情况下，我们都不会将采集到的信息提供给任何第三方。\n
+
+          三、合规性\n
+
+          本小程序已经昆山杜克大学研究伦理委员会审查通过，符合学术研究规范要求。\n
+
+          四、遵守规定\n
+
+          本小程序严格遵守微信小程序开发、运营规则，确保所有活动操作在合法、规范的范围内进行。\n
+
+          五、咨询与反馈\n
+
+          如您对我们的隐私声明有任何疑问或需要提供任何反馈，欢迎随时与我们联系。\n
+          联系方式：yucen.xiao@dukekunshan.edu.cn \n
+
+          感谢您的信任，我们会竭尽全力守护信息安全。
+        </text>
+      </scroll-view>
+    </modal>
+  </view>
+
+  <view>
+    <view style="color: #FFF;background:#419f8c; font-size: 40rpx;text-align: center;line-height: 90rpx;height: 90rpx;">
+      注册
+    </view>
+    <scroll-view scroll-y style="height: calc(100vh - 90rpx);">
+
+      <view class='itemClass'>
+        <text>您的性别: </text>
+        <radio-group class="radio-group" bindchange="newChange" data-name="sex">
+          <label class="radio" wx:for="{{sexArr}}" wx:key="index">
+            <radio value="{{item.name}}"/>{{item.value}}
+          </label>
+        </radio-group>
+      </view>
+
+      <view class='itemClass'>
+        <text>您的年龄: </text>
+        <radio-group class="radio-group" bindchange="newChange" data-name="age">
+          <label class="radio" wx:for="{{ageArr}}" wx:key="index">
+            <radio value="{{item}}"/>{{item}}
+          </label>
+        </radio-group>
+      </view>
+
+      <view class='itemClass'>
+        <text>您的最高学历: </text>
+        <radio-group class="radio-group" bindchange="newChange" data-name="grad">
+          <label class="radio" wx:for="{{gradArr}}" wx:key="index">
+            <radio value="{{item}}"/>{{item}}
+          </label>
+        </radio-group>
+      </view>
+
+      <view class='itemClass'>
+        <text>您的职业: </text>
+        <radio-group class="radio-group" bindchange="newChange" data-name="occupation">
+          <label class="radio" wx:for="{{occupationArr}}" wx:key="index">
+            <radio value="{{item}}"/>{{item}}
+          </label>
+        </radio-group>
+      </view>
+
+      <view class='itemClass2'>
+        <text>请问您的月均收入(税前)属于以下哪个范围? </text>
+        <view style="height: 15rpx;"></view>
+        <radio-group class="radio-group" bindchange="newChange" data-name="income">
+          <label class="radio" wx:for="{{incomeArr}}" wx:key="index">
+            <radio value="{{item}}"/>{{item}}
+          </label>
+        </radio-group>
+      </view>
+
+      <view>
+        <text class="finish" bind:tap="getAuthorize">完成注册</text>
+      </view>
+
+    </scroll-view>
+  </view>
 </view>
