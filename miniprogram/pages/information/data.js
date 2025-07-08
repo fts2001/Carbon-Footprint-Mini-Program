@@ -1,6 +1,6 @@
 export default {
   /** 文章推荐系统信息 */
-  RECOMMENDATION_VERSION: '2.2.0', // 用来识别是否需要处理旧用户的 （Note: 请勿轻易更改，会去除用并重置户当前的articleRecommend信息）
+  RECOMMENDATION_VERSION: '2.3.0', // 用来识别是否需要处理旧用户的 （Note: 请勿轻易更改，会去除用并重置户当前的articleRecommend信息）
   ARTICLE_COLLECTION: 'articles', // articles是实际用来用的， articlesTest是测试用的
   RECOMMENDATION_HISTORY_COLLECTION: 'recommendHistory',
   RECOMMENDATION_DATA_COLLECTION: 'articleRecommend',
@@ -43,7 +43,7 @@ export default {
   ARTICLE_WEIGHT_SCORES: {
     'TAG': 4,
     'SUBTAG': 4,
-    'GEOLOCATION': 3,
+    'GEOLOCATION': 3000,
     'TIME': 3,
     'READ': -6,
     'RANDOM': 3  // 控制随机分布权重占比，0 为完全不随机
@@ -62,10 +62,17 @@ export default {
     '正负': ['负面', '非负面']
   },
 
+  /* infoGroup 分组的 Key */
+  INFOGROUP_DISTRIBUTION_KEYS: {
+    '随机': 0.2,
+    '地域': 0.4,
+    '模型': 0.4
+  },
+
   /** 数据库存储 Key */
   RECOMMENDATION_DATA_KEYS: {
     RECOMMENDATION_VERSION: '-1',
-    infoGroup: -1,
+    infoGroup: '',
     features: {},
     recommendedArticles: {}
   }

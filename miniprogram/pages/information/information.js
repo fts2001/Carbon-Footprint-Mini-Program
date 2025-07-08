@@ -126,8 +126,14 @@ Page({
    * 初始化用户的云端 articleRecommend 数据（Note: 这里应该根据版本改变发生变动）
    */
   async initUserData() {
-    // 根据文章种类的数量分配 infoGroup 组 （去除碳行家的）
-    const infoGroup = Math.floor(Math.random() * defaultData.RECOMMENDATION_INFOGROUP_AMOUNT); 
+    // 根据分组规则 Key 分配 infoGroup 组
+    // TODO: 检测用户是否给予了'地域位置'权限，否则一律给'随机'
+    const infoGroup = (() => { 
+      const e = Object.entries(defaultData.INFOGROUP_DISTRIBUTION_KEYS); 
+      const t = e.reduce((s, [, w]) => s + w, 0), r = Math.random(); 
+      let a = 0; 
+      for (const [k, w] of e) if ((a += w / t) >= r) return k 
+    })();
 
     // 根据 author 得到对应的标签 list
     const tagsList = Object.values(defaultData.ARTICLE_TAGS).flat();
@@ -209,6 +215,8 @@ Page({
     readIDs = [],
     count = 10,
   }) {
+    // TODO: 根据用户 infoGroup 来进行分组
+
     const $ = db.command.aggregate;
     const currentTimestamp = Date.now();
     const seed = Math.floor(Date.now());
