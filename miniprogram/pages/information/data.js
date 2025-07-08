@@ -45,7 +45,8 @@ export default {
     'SUBTAG': 4,
     'GEOLOCATION': 3,
     'TIME': 3,
-    'READ': -6
+    'READ': -6,
+    'RANDOM': 3  // 控制随机分布权重占比，0 为完全不随机
   },
 
   /** 文章种类对应的 tags （这个会显示） */

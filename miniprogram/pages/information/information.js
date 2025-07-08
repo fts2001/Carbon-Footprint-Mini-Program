@@ -199,7 +199,7 @@ Page({
   /**
    * 获取云端文章
    * @returns {Array} 返回推荐的文章列表
-   */  
+   */
   async fetchArticles({
     author = "", 
     tags = [], 
@@ -207,14 +207,19 @@ Page({
     geolocation = "", 
     excludedIDs = [], 
     readIDs = [],
-    count = 10 
+    count = 10,
   }) {
     const $ = db.command.aggregate;
+    const currentTimestamp = Date.now();
+    const seed = Math.floor(Date.now());
+    const RAND_FACTOR = 0.2; // 控制随机分布的， 0 为完全不随机
+    const HASH_CONST = 2654435761;
+    const LARGE_PRIME = 1000003;
 
     try {
-      const currentTimestamp = Date.now();
       const res = await db.collection(defaultData.ARTICLE_COLLECTION)
         .aggregate()
+
         // 1. 过滤作者，排除的ID
         .match({ 
           _id: { $not: { $in: excludedIDs } },
@@ -222,7 +227,7 @@ Page({
             ? { author: { $ne: defaultData.ARTICLE_AUTHORS[-1] } }
             : { author })
         })
-  
+
         .addFields({
           // 2. 计算 tags 匹配比例的分数
           tagsIntersectionScore: $.multiply($.size($.setIntersection([tags, "$tags"])), defaultData.ARTICLE_WEIGHT_SCORES.TAG),
@@ -255,7 +260,7 @@ Page({
           )
         })
 
-        // 6. 统计所有分数
+        // 7. 统计所有分数
         .addFields({
           totalScore: $.add([
             "$tagsIntersectionScore",
@@ -265,21 +270,59 @@ Page({
             "$readPenaltyScore"
           ])
         })
-  
-        // 7. 按总分排序，上传时间也优先
-        .sort({
-          totalScore: -1,
-          uploadTime: -1
+
+        // 8. 基于 _id 前缀生成伪随机扰动
+        .addFields({
+          idPrefix: { $substrBytes: [{ $toString: "$_id" }, 0, 8] },
+          pseudoRandom: {
+            $mod: [
+              $.add([
+                $.multiply([
+                  { $convert: { input: "$idPrefix", to: "long", onError: 0, onNull: 0 } },
+                  HASH_CONST
+                ]),
+                seed
+              ]),
+              LARGE_PRIME
+            ]
+          }
         })
-  
-        // 8. 限制返回数量
+        .addFields({
+          normalizedPseudoRandom: {
+            $divide: [
+              "$pseudoRandom",
+              LARGE_PRIME
+            ]
+          }
+        })
+
+        // 9. 扰动分数排序 totalScore * normalizedPseudoRandom^randfactor
+        .addFields({
+          weightedScore: {
+            $add: [
+              {
+                $multiply: ["$totalScore", { $subtract: [1, RAND_FACTOR] }]
+              },
+              {
+                $multiply: ["$normalizedPseudoRandom", defaultData.ARTICLE_WEIGHT_SCORES.RANDOM, RAND_FACTOR]
+              }
+            ]
+          }
+        })        
+
+        // 10. 排序并返回
+        .sort({
+          weightedScore: -1
+        })
+
+        // 11. 限制返回数量
         .limit(count)
         .end();
-  
-      return res.list
+
+      return res.list;
     } catch (error) {
       console.error("获取文章时出错：", error);
-      return []
+      return [];
     }
   },
 
