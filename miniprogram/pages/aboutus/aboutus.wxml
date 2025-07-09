@@ -3,4 +3,6 @@
 <text style=" text-align: center; font-size: 16px; color: white;">
   昆山杜克大学\n\n个人碳足迹研究小组\n\n致力碳排放知识科普与促进低碳绿色生活 \n\n 联系我们： \n\n Email:yucen.xiao@dukekunshan.edu.cn \n
 </text>
+<!-- <button bind:tap="HandleSendCash">test</button> -->
 </view>
+

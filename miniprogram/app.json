@@ -18,7 +18,8 @@
     "pages/prizeCenter/prizeCenter",
     "pages/merchDetail/merchDetail",
     "pages/aboutus/aboutus",
-    "pages/track/track"
+    "pages/track/track",
+    "pages/authentication/authentication"
 
   ],
   "tabBar": {
