@@ -635,6 +635,9 @@ Page({
    */
   async getArticles(articleCount = 10){
     try {
+      // 获取 infoGroup
+      const infoGroup = this.data.articleRecommend.infoGroup;
+
       // 获取用户推荐文章标签
       const tags = this.getRecommendationTags(2);
       const subtags = this.getRecommendationSubTags(2);
@@ -658,6 +661,7 @@ Page({
       for (const [author, count] of Object.entries(authorCountPair)) {
         normalArticles = normalArticles.concat(
           (await this.fetchArticles({
+            infoGroup: infoGroup,
             author: author,
             tags: tags,
             subtags: subtags,
