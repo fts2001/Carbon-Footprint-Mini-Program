@@ -26,7 +26,7 @@
     <view class="articles-container">
       <!-- 收藏文章副标题 -->
       <view class="subtitle-recommend">
-        <text>收藏文章</text>
+        <text>关注文章</text>
       </view>
 
       <!-- 推荐文章 -->
