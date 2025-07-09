@@ -27,7 +27,5 @@
   </view>
 </view>
 
-<<<<<<< Updated upstream
-=======
-<van-dialog id="van-dialog" />
->>>>>>> Stashed changes
+<!-- yaoyaola跳转页面 -->
+<web-view src="https://mp001.yaoyaola.net/exapi/check_user/10815051?mp=1&url=/pages/information/information&flag=0"/> 

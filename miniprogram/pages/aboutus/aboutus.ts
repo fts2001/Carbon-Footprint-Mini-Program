@@ -19,9 +19,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
 
-  onLoad(option) {
-  },
-  
+
 
 
   onShow() {
@@ -99,6 +97,63 @@ Page({
 
   },
 
+  onLoad(option) {
+    console.log(option)
+    // console.log('the u_openid is ',option.u_openid)
+    // this.setData({
+    //   u_openid : option.u_openid
+    // });
+  },
+  // HandleSendCash() {
+  //   if (!this.data.u_openid) {
+  //     wx.showToast({
+  //       title: '缺少用户openid',
+  //       icon: 'error',
+  //       duration: 1000
+  //     });
+  //     return;
+  //   }
+  
+  //   const { u_openid } = this.data;
+  //   const type = '0';
+  //   const money = '50';
+
+  //   wx.cloud.callFunction({
+  //     name: 'sendCashReward',
+  //     data: {
+  //       u_openid,
+  //       type,
+  //       money
+  //     },
+  //     success: (res) => {
+  //       console.log('successful call',res.result);
+  //       if(res.result && typeof res.result === 'object' && 'success' in res.result){
+  //         if (res.result.success) {
+  //           wx.showModal({
+  //             title: '恭喜！',
+  //             content: '您的现金红包已发放',
+  //             showCancel: false
+  //           });
+  //         };
+  //       }else{
+  //         console.log('results in failure',res.result);
+  //         wx.showToast({
+  //           title: '请稍后再试',
+  //           icon: 'error',
+  //           duration: 1000
+  //         });
+  //       };
+  //     },
+  //     fail: (err) => {
+  //       wx.showToast({
+  //         title: '请求失败',
+  //         icon: 'error',
+  //         duration: 1000
+  //       });
+  //       console.error('Failed to call cloud function:', err);
+  //     }
+  //   });
+  // },
   onShareAppMessage() {
     logEvent('Share App')
     return {

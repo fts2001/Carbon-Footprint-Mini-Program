@@ -13,9 +13,13 @@ Page({
   data: {
     /** 常量数据 defaultData ，这个是给UI访问的, 默认直接用 defaultData 而不是 this.data.defaultData */
     defaultData,
-
+    
     /** 页面基本信息 */
     background: null,
+    isLoading: false,
+
+    /** 发钱API用户ID */
+    u_openid : null,
 
     /** UI 相关 */
     UISelectedTag: '',
@@ -25,6 +29,9 @@ Page({
     /** 用户基本信息 */
     userInfo: null,
     openID: null,
+
+    /** 地理位置 */
+    geolocation: null,
 
     /** 是否从朋友圈转发进入 */
     isFromShareTimeline: true,
@@ -96,12 +103,42 @@ Page({
     }
   },
 
-    /**
+  /**
+   * 上传一次推荐的文章的 ID 到数据库记录
+   * @param {*} articleIDs 此次推荐的所有文章的 ID 列表
+   */
+  async uploadUserRecommendHistory(articleIDs) {
+    try {
+      const recommendTime = new Date(); // 当前时间戳
+      const currentFeatures = this.data.articleRecommend.features; // 本次推荐后的特征分数
+      const currentReadArticles = this.data.articleRecommend.recommendedArticles; // 截至这次推荐已经读过的文章
+
+      await db.collection(defaultData.RECOMMENDATION_HISTORY_COLLECTION).add({
+        data: {
+          articleIDs: articleIDs,
+          recommendTime: recommendTime,
+          currentFeatures: currentFeatures,
+          currentReadArticles: currentReadArticles
+        }
+      });
+
+      console.log("成功记录此次推荐");
+    } catch (err) {
+      console.error("此次推荐记录失败：" + err);
+    }
+  },
+
+  /**
    * 初始化用户的云端 articleRecommend 数据（Note: 这里应该根据版本改变发生变动）
    */
   async initUserData() {
-    // 根据文章种类的数量分配 infoGroup 组 （去除碳行家的）
-    const infoGroup = Math.floor(Math.random() * defaultData.RECOMMENDATION_INFOGROUP_AMOUNT); 
+    // 分配 infoGroup
+    let infoGroup = (() => { 
+      const e = Object.entries(defaultData.INFOGROUP_DISTRIBUTION_KEYS); 
+      const t = e.reduce((s, [, w]) => s + w, 0), r = Math.random(); 
+      let a = 0; 
+      for (const [k, w] of e) if ((a += w / t) >= r) return k 
+    })();
 
     // 根据 author 得到对应的标签 list
     const tagsList = Object.values(defaultData.ARTICLE_TAGS).flat();
@@ -173,21 +210,36 @@ Page({
   /**
    * 获取云端文章
    * @returns {Array} 返回推荐的文章列表
-   */  
+   */
   async fetchArticles({
+    infoGroup = "",
     author = "", 
     tags = [], 
     subtags = [], 
     geolocation = "", 
     excludedIDs = [], 
-    count = 10 
+    readIDs = [],
+    count = 10,
   }) {
     const $ = db.command.aggregate;
+    const currentTimestamp = Date.now();
+    const seed = Math.floor(Date.now());
+    const HASH_CONST = 2654435761;
+    const LARGE_PRIME = 1000003;
+
+    // 根据用户 infoGroup 来进行分组
+    const settingRes = await wx.getSetting();
+    const locationAuthorization = this.data.userInfo.basicInfo?.authorize?.userLocation;
+    if (infoGroup === '地域' && (locationAuthorization !== true || !settingRes.authSetting["scope.userLocationBackground"])) {
+      infoGroup = '随机'; // 没有地理权限则是'随机'
+    }
+    const randomFactor = infoGroup === '随机' ? 1.0 : 0.2; // 控制随机分布的， 0 为完全不随机, 1 为完全随机
+    const geoMultiplier = infoGroup === '地域' ? 10 : 1;
 
     try {
-      const currentTimestamp = Date.now();
       const res = await db.collection(defaultData.ARTICLE_COLLECTION)
         .aggregate()
+
         // 1. 过滤作者，排除的ID
         .match({ 
           _id: { $not: { $in: excludedIDs } },
@@ -195,7 +247,7 @@ Page({
             ? { author: { $ne: defaultData.ARTICLE_AUTHORS[-1] } }
             : { author })
         })
-  
+
         .addFields({
           // 2. 计算 tags 匹配比例的分数
           tagsIntersectionScore: $.multiply($.size($.setIntersection([tags, "$tags"])), defaultData.ARTICLE_WEIGHT_SCORES.TAG),
@@ -204,9 +256,11 @@ Page({
           subtagsIntersectionScore: $.multiply($.size($.setIntersection([subtags, "$subtags"])), defaultData.ARTICLE_WEIGHT_SCORES.SUBTAG),
 
           // 4. 计算 geolocation 匹配分数
-          geolocationScore: $.cond(
-            [$.eq(["$geolocation", geolocation]), defaultData.ARTICLE_WEIGHT_SCORES.GEOLOCATION, 0]
-          ),
+          geolocationScore: $.cond([
+            $.eq(["$geolocation", geolocation]),
+            $.multiply([defaultData.ARTICLE_WEIGHT_SCORES.GEOLOCATION, geoMultiplier]),
+            0
+          ]),
 
           // 5. 计算 uploadTime 距离当今的分数： 7天内满分；7-30天内 递减；30天以后 0
           uploadTimeScore: $.cond([
@@ -220,33 +274,173 @@ Page({
               // 30天以后 0
               0
             ])
-          ])
+          ]),
+
+          // 6. 曾经阅读过的文章扣分（不那么容易被推荐）
+          readPenaltyScore: $.cond(
+            [$.in(["$_id", readIDs]), defaultData.ARTICLE_WEIGHT_SCORES.READ, 0]
+          )
         })
 
-        // 6. 统计所有分数
+        // 7. 统计所有分数
         .addFields({
           totalScore: $.add([
             "$tagsIntersectionScore",
             "$subtagsIntersectionScore",
             "$geolocationScore",
-            "$uploadTimeScore"
+            "$uploadTimeScore",
+            "$readPenaltyScore"
           ])
         })
-  
-        // 7. 按总分排序，上传时间也优先
-        .sort({
-          totalScore: -1,
-          uploadTime: -1
+
+        // 8. 基于 _id 前缀生成伪随机扰动
+        .addFields({
+          idPrefix: { $substrBytes: [{ $toString: "$_id" }, 0, 8] },
+          pseudoRandom: {
+            $mod: [
+              $.add([
+                $.multiply([
+                  { $convert: { input: "$idPrefix", to: "long", onError: 0, onNull: 0 } },
+                  HASH_CONST
+                ]),
+                seed
+              ]),
+              LARGE_PRIME
+            ]
+          }
         })
-  
-        // 8. 限制返回数量
+        .addFields({
+          normalizedPseudoRandom: {
+            $divide: [
+              "$pseudoRandom",
+              LARGE_PRIME
+            ]
+          }
+        })
+
+        // 9. 扰动分数排序 totalScore * normalizedPseudoRandom^randfactor
+        .addFields({
+          weightedScore: {
+            $add: [
+              {
+                $multiply: ["$totalScore", { $subtract: [1, randomFactor] }]
+              },
+              {
+                $multiply: ["$normalizedPseudoRandom", defaultData.ARTICLE_WEIGHT_SCORES.RANDOM, randomFactor]
+              }
+            ]
+          }
+        })        
+
+        // 10. 排序并返回
+        .sort({
+          weightedScore: -1
+        })
+
+        // 11. 限制返回数量
         .limit(count)
         .end();
-  
-      return res.list
+
+      return res.list;
     } catch (error) {
       console.error("获取文章时出错：", error);
-      return []
+      return [];
+    }
+  },
+
+  /**
+   * 处理现金发放事件
+   * @param {*} u_openid 发钱API用户ID
+   */
+  async handleSendEntranceCash(u_openid) {
+    const openid = app.globalData.openID;
+    const db = wx.cloud.database();
+    const _ = db.command;
+
+    if (!openid || !u_openid) {
+      return;
+    }
+
+    try {
+      // 检查是否已发放
+      const entryCheck = await db.collection("entryList").doc(openid).get()
+        .then(res => res.data)
+        .catch(() => null);
+
+      if (entryCheck) {
+        wx.showModal({
+          title: "提示",
+          content: "您已领取过红包",
+          showCancel: false
+        });
+        return;
+      }
+
+      // 写入领取记录
+      await db.collection("entryList").add({
+        data: {
+          _id: openid,
+          u_openid,
+          date: new Date()
+        }
+      });
+
+      // 获取奖励金额等信息
+      const transferMoneyData = await db.collection("transferMoney").get();
+      const transferMoney = transferMoneyData.data[0];
+
+      if (!transferMoney || !transferMoney.active) {
+        wx.showModal({
+          title: "抱歉",
+          content: "现金奖励未启用",
+          showCancel: false
+        });
+        return;
+      }
+
+      const money = transferMoney.entrance.money;
+      const remark = transferMoney.entrance.info;
+
+      // 调用云函数发钱
+      wx.cloud.callFunction({
+        name: 'sendCashReward',
+        data: {
+          u_openid,
+          type: '0',
+          money: String(money),
+        },
+        success: (res) => {
+          if (res.result && res.result.success) {
+            wx.showModal({
+              title: "恭喜！",
+              content: "低碳现金红包已发放",
+              showCancel: false
+            });
+          } else {
+            wx.showToast({
+              title: '发放失败，请稍后再试',
+              icon: 'error',
+              duration: 1500
+            });
+          }
+        },
+        fail: (err) => {
+          console.error('云函数调用失败:', err);
+          wx.showToast({
+            title: '请求失败',
+            icon: 'error',
+            duration: 1500
+          });
+        }
+      });
+
+    } catch (err) {
+      console.error('处理失败:', err);
+      wx.showModal({
+        title: "错误",
+        content: err.message || "发生未知错误",
+        showCancel: false
+      });
     }
   },
 
@@ -441,11 +635,20 @@ Page({
    */
   async getArticles(articleCount = 10){
     try {
+      // 获取 infoGroup
+      const infoGroup = this.data.articleRecommend.infoGroup;
+
       // 获取用户推荐文章标签
       const tags = this.getRecommendationTags(2);
       const subtags = this.getRecommendationSubTags(2);
 
-      // 获取用户已读文章并排除
+      // 获取用户地理位置
+      const geolocation = this.data.geolocation;
+
+      // 获取用户已显示文章并排除
+      const shownIDs = this.data.articleShowList.map(item => item._id);
+
+      // 获取用户已读文章
       const readIDs = Object.values(
         this.data.articleRecommend.recommendedArticles
       ).flat();
@@ -453,41 +656,41 @@ Page({
       // 获取根据 author 数量动态分配对应数量文章的推荐
       const authorCountPair = this.getAuthorGenerateArticleCount(articleCount)
 
-      // 碳行家默认文章
-      let carbonArticles = await this.fetchArticles({
-        author: defaultData.ARTICLE_AUTHORS[-1]
-      })
-
       // 普通文章推荐，并随机 shuffle 排序
       let normalArticles = []
       for (const [author, count] of Object.entries(authorCountPair)) {
         normalArticles = normalArticles.concat(
           (await this.fetchArticles({
+            infoGroup: infoGroup,
             author: author,
             tags: tags,
             subtags: subtags,
-            geolocation: '', // TODO: 添加地域
-            excludedIDs: readIDs,
+            geolocation: geolocation,
+            excludedIDs: shownIDs,
+            readIDs: readIDs,
             count: count
           }))
         );
       }
       normalArticles.sort(() => Math.random() - 0.5)
 
-      // 更新 articleShowList
-      let articles = carbonArticles.concat(normalArticles)
+      // 记录此次推荐
+      await this.uploadUserRecommendHistory(normalArticles.map(item => item._id))
+
+      // 添加新增文章到末尾
+      const articles = this.data.articleShowList.concat(normalArticles);
       this.setData({
         articleShowList: articles
-      })
+      });
 
       // 更新 UIArticleTags
       this.setData({ 
         UIArticleTags: [this.data.UIArticleTags[0], ...[...new Set(this.data.articleShowList.flatMap(a => (a.tags || []).filter(Boolean)))].sort()] 
       });      
 
-      console.log("文章分配成功：\n")
-      console.log(authorCountPair)
-      console.log(articles)
+      console.log("文章分配成功\n")
+      // console.log(authorCountPair)
+      // console.log(articles)
     } catch(error) {
       console.error("分配文章失败: ", error)
     }
@@ -561,6 +764,36 @@ Page({
     })
   },
 
+  /**
+   * UI 的自定义滚动触底事件
+   */
+  async onScrollToLower() {
+    if (this.data.isLoading) return; // 防止多次触发
+  
+    this.setData({ isLoading: true });
+    wx.showLoading({ title: '加载文章中...', mask: true });
+  
+    try {
+      console.log('推荐新文章中...');
+      await this.getArticles(10);
+  
+      // 更新 UI 标签（选择第一个'综合'标签）
+      this.bindSelectUITag({
+        currentTarget: {
+          dataset: {
+            tag: this.data.UIArticleTags[0]
+          }
+        }
+      });
+    } catch (e) {
+      console.error('加载文章失败', e);
+      wx.showToast({ title: '加载失败', icon: 'none' });
+    } finally {
+      wx.hideLoading()
+      this.setData({ isLoading: false });
+    }
+  },
+
   ///////////////////////////////////////////////////////////////////////
   /////////////////// 功能函数 LOCAL FUNCTIONAL METHOD ///////////////////
   ///////////////////////////////////////////////////////////////////////
@@ -568,25 +801,81 @@ Page({
   /**
    * 初始化本页面数据
    */
-  async initData(){
+  async initData() {
+    this.setData({ isLoading: true });
+
+    // 加载中显示
+    wx.showLoading({ title: "文章加载中…", mask: true });
+    const timeoutId = setTimeout(() => {
+      wx.hideLoading(); // 最多10秒后关闭loading（保险）
+    }, 10000);
+
     // 获取用户云端数据
     await this.fetchUserCloudFromData();
 
     // 检查版本更新
     await this.checkVersionUpdate();
 
-    // 获取文章
-    await this.getArticles(10);
+    // 初始化“碳行家”文章
+    const expertArticles = await this.fetchArticles({
+      author: defaultData.ARTICLE_AUTHORS[-1]
+    });
+    this.setData({ articleShowList: expertArticles });
 
-    // 更新 UI
-    this.bindSelectUITag({
-      currentTarget: {
-        dataset:{
-          tag: this.data.UIArticleTags[0]
+    // 初始化获取文章内置函数
+    const finishArticleInit = async () => {
+      await this.getArticles(10);
+      this.bindSelectUITag({
+        currentTarget: {
+          dataset: {
+            tag: this.data.UIArticleTags[0]
+          }
         }
-      }
-    })
+      });
+      this.setData({ isLoading: false });
+    };
+
+    // 获取地理位置
+    const setting = await wx.getSetting();
+    const hasLocationPermission = setting.authSetting["scope.userLocationBackground"];
+    if (hasLocationPermission) {
+      wx.getLocation({
+        type: "gcj02",
+        timeout: 5000,
+        success: async loc => {
+          const latitude = loc.latitude.toFixed(2);
+          const longitude = loc.longitude.toFixed(2);
+
+          const { result: sendParams } = await wx.cloud.callFunction({
+            name: "setweather",
+            data: { longitude, latitude }
+          }) || {};
+
+          const rawProvince = sendParams.provinceName || "";
+          const cleanedProvince = rawProvince.replace(/(省|市|区|县|自治区|特别行政区)$/, "");
+          this.setData({ geolocation: cleanedProvince });
+          console.log(`获取定位成功：${cleanedProvince}`);
+
+          await finishArticleInit();
+          clearTimeout(timeoutId);
+          wx.hideLoading();
+        },
+        fail: async err => {
+          console.warn("获取定位失败：", err);
+          
+          await finishArticleInit();
+          clearTimeout(timeoutId);
+          wx.hideLoading();
+        }
+      });
+
+      return;
+    }
+
+    // 无定位权限，直接初始化文章
+    await finishArticleInit();
   },
+
 
   ///////////////////////////////////////////////////////////////////////////
   /////////////////// 页面周期函数 PAGE BUILT-IN FUNCTIONS ///////////////////
@@ -615,6 +904,17 @@ Page({
 
     // 获取用户 openid 和 userInfo
     updateUserData();
+
+    // 添加发钱 id 
+    console.log('the u_openid is ',options.u_openid)
+    this.setData({
+      u_openid:options.u_openid
+    })
+
+    // 处理发钱事件
+    if(options.u_openid){
+      this.handleSendEntranceCash(options.u_openid)
+    }
 
     // 初始化页面信息
     this.initData();
@@ -647,23 +947,6 @@ Page({
     // 设置标题栏
     wx.setNavigationBarTitle({
       title: '碳行家｜信息中心'
-    })
-  },
-
-  /**
-   * 下拉刷新
-   */
-  async onPullDownRefresh() {
-    // 获取文章
-    await this.getArticles(10);
-
-    // 更新 UI
-    this.bindSelectUITag({
-      currentTarget: {
-        dataset:{
-          tag: this.data.UIArticleTags[0]
-        }
-      }
     })
   },
 
@@ -702,5 +985,5 @@ Page({
         console.log('share failed')
       }
     }
-  },
+  }
 })
