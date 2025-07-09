@@ -41,10 +41,10 @@ export default {
 
   /** 文章推荐分数权重 */
   ARTICLE_WEIGHT_SCORES: {
-    'TAG': 4,
-    'SUBTAG': 4,
-    'GEOLOCATION': 3000,
-    'TIME': 3,
+    'TAG': 6,
+    'SUBTAG': 6,
+    'GEOLOCATION': 2,
+    'TIME': 2,
     'READ': -6,
     'RANDOM': 3  // 控制随机分布权重占比，0 为完全不随机
   },

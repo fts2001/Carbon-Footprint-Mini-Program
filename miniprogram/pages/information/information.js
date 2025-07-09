@@ -27,6 +27,9 @@ Page({
     userInfo: null,
     openID: null,
 
+    /** 地理位置 */
+    geolocation: null,
+
     /** 是否从朋友圈转发进入 */
     isFromShareTimeline: true,
 
@@ -126,9 +129,8 @@ Page({
    * 初始化用户的云端 articleRecommend 数据（Note: 这里应该根据版本改变发生变动）
    */
   async initUserData() {
-    // 根据分组规则 Key 分配 infoGroup 组
-    // TODO: 检测用户是否给予了'地域位置'权限，否则一律给'随机'
-    const infoGroup = (() => { 
+    // 分配 infoGroup
+    let infoGroup = (() => { 
       const e = Object.entries(defaultData.INFOGROUP_DISTRIBUTION_KEYS); 
       const t = e.reduce((s, [, w]) => s + w, 0), r = Math.random(); 
       let a = 0; 
@@ -207,6 +209,7 @@ Page({
    * @returns {Array} 返回推荐的文章列表
    */
   async fetchArticles({
+    infoGroup = "",
     author = "", 
     tags = [], 
     subtags = [], 
@@ -215,14 +218,20 @@ Page({
     readIDs = [],
     count = 10,
   }) {
-    // TODO: 根据用户 infoGroup 来进行分组
-
     const $ = db.command.aggregate;
     const currentTimestamp = Date.now();
     const seed = Math.floor(Date.now());
-    const RAND_FACTOR = 0.2; // 控制随机分布的， 0 为完全不随机
     const HASH_CONST = 2654435761;
     const LARGE_PRIME = 1000003;
+
+    // 根据用户 infoGroup 来进行分组
+    const settingRes = await wx.getSetting();
+    const locationAuthorization = this.data.userInfo.basicInfo?.authorize?.userLocation;
+    if (infoGroup === '地域' && (locationAuthorization !== true || !settingRes.authSetting["scope.userLocationBackground"])) {
+      infoGroup = '随机'; // 没有地理权限则是'随机'
+    }
+    const randomFactor = infoGroup === '随机' ? 1.0 : 0.2; // 控制随机分布的， 0 为完全不随机, 1 为完全随机
+    const geoMultiplier = infoGroup === '地域' ? 10 : 1;
 
     try {
       const res = await db.collection(defaultData.ARTICLE_COLLECTION)
@@ -244,9 +253,11 @@ Page({
           subtagsIntersectionScore: $.multiply($.size($.setIntersection([subtags, "$subtags"])), defaultData.ARTICLE_WEIGHT_SCORES.SUBTAG),
 
           // 4. 计算 geolocation 匹配分数
-          geolocationScore: $.cond(
-            [$.eq(["$geolocation", geolocation]), defaultData.ARTICLE_WEIGHT_SCORES.GEOLOCATION, 0]
-          ),
+          geolocationScore: $.cond([
+            $.eq(["$geolocation", geolocation]),
+            $.multiply([defaultData.ARTICLE_WEIGHT_SCORES.GEOLOCATION, geoMultiplier]),
+            0
+          ]),
 
           // 5. 计算 uploadTime 距离当今的分数： 7天内满分；7-30天内 递减；30天以后 0
           uploadTimeScore: $.cond([
@@ -309,10 +320,10 @@ Page({
           weightedScore: {
             $add: [
               {
-                $multiply: ["$totalScore", { $subtract: [1, RAND_FACTOR] }]
+                $multiply: ["$totalScore", { $subtract: [1, randomFactor] }]
               },
               {
-                $multiply: ["$normalizedPseudoRandom", defaultData.ARTICLE_WEIGHT_SCORES.RANDOM, RAND_FACTOR]
+                $multiply: ["$normalizedPseudoRandom", defaultData.ARTICLE_WEIGHT_SCORES.RANDOM, randomFactor]
               }
             ]
           }
@@ -529,6 +540,9 @@ Page({
       const tags = this.getRecommendationTags(2);
       const subtags = this.getRecommendationSubTags(2);
 
+      // 获取用户地理位置
+      const geolocation = this.data.geolocation;
+
       // 获取用户已显示文章并排除
       const shownIDs = this.data.articleShowList.map(item => item._id);
 
@@ -548,7 +562,7 @@ Page({
             author: author,
             tags: tags,
             subtags: subtags,
-            geolocation: '', // TODO: 添加地域
+            geolocation: geolocation,
             excludedIDs: shownIDs,
             readIDs: readIDs,
             count: count
@@ -684,8 +698,14 @@ Page({
   /**
    * 初始化本页面数据
    */
-  async initData(){
-    this.setData({ isLoading: true })
+  async initData() {
+    this.setData({ isLoading: true });
+
+    // 加载中显示
+    wx.showLoading({ title: "文章加载中…", mask: true });
+    const timeoutId = setTimeout(() => {
+      wx.hideLoading(); // 最多10秒后关闭loading（保险）
+    }, 10000);
 
     // 获取用户云端数据
     await this.fetchUserCloudFromData();
@@ -693,27 +713,66 @@ Page({
     // 检查版本更新
     await this.checkVersionUpdate();
 
-    // 初始化填充碳行家文章
-    this.setData({
-      articleShowList: await this.fetchArticles({
-        author: defaultData.ARTICLE_AUTHORS[-1]
-      })
+    // 初始化“碳行家”文章
+    const expertArticles = await this.fetchArticles({
+      author: defaultData.ARTICLE_AUTHORS[-1]
     });
+    this.setData({ articleShowList: expertArticles });
 
-    // 初始推荐 10 篇文章
-    await this.getArticles(10);
-
-    // 更新 UI
-    this.bindSelectUITag({
-      currentTarget: {
-        dataset:{
-          tag: this.data.UIArticleTags[0]
+    // 初始化获取文章内置函数
+    const finishArticleInit = async () => {
+      await this.getArticles(10);
+      this.bindSelectUITag({
+        currentTarget: {
+          dataset: {
+            tag: this.data.UIArticleTags[0]
+          }
         }
-      }
-    })
+      });
+      this.setData({ isLoading: false });
+    };
 
-    this.setData({ isLoading: false })
+    // 获取地理位置
+    const setting = await wx.getSetting();
+    const hasLocationPermission = setting.authSetting["scope.userLocationBackground"];
+    if (hasLocationPermission) {
+      wx.getLocation({
+        type: "gcj02",
+        timeout: 5000,
+        success: async loc => {
+          const latitude = loc.latitude.toFixed(2);
+          const longitude = loc.longitude.toFixed(2);
+
+          const { result: sendParams } = await wx.cloud.callFunction({
+            name: "setweather",
+            data: { longitude, latitude }
+          }) || {};
+
+          const rawProvince = sendParams.provinceName || "";
+          const cleanedProvince = rawProvince.replace(/(省|市|区|县|自治区|特别行政区)$/, "");
+          this.setData({ geolocation: cleanedProvince });
+          console.log(`获取定位成功：${cleanedProvince}`);
+
+          await finishArticleInit();
+          clearTimeout(timeoutId);
+          wx.hideLoading();
+        },
+        fail: async err => {
+          console.warn("获取定位失败：", err);
+          
+          await finishArticleInit();
+          clearTimeout(timeoutId);
+          wx.hideLoading();
+        }
+      });
+
+      return;
+    }
+
+    // 无定位权限，直接初始化文章
+    await finishArticleInit();
   },
+
 
   ///////////////////////////////////////////////////////////////////////////
   /////////////////// 页面周期函数 PAGE BUILT-IN FUNCTIONS ///////////////////
