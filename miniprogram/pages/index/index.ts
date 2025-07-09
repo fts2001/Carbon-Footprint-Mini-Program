@@ -1,7 +1,7 @@
 import { setColorStyle, updateColor } from "../../utils/colorschema";
 import { logEvent } from "../../utils/log";
 import { onHandleSignIn } from "../../utils/login";
-
+import Dialog from "../../miniprogram_npm/@vant/weapp/dialog/dialog"
 // pages/index/index.ts
 const app = getApp();
 
@@ -73,7 +73,7 @@ Page({
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady() {},
+  onReady() { },
 
   // record share relations
   async recordShare(sharedFromid: string) {
@@ -153,12 +153,25 @@ Page({
       this.isFetchingUserInfo = true;
       onHandleSignIn({
         success: () => {
+          console.log("1", app.globalData.userInfo);
+          
           this.isNavigating = true;
           setTimeout(() => {
-            wx.reLaunch({
-              url: `/pages/${this.FIRST_PAGE}/${this.FIRST_PAGE}`,
-              complete: () => (this.isNavigating = false)
-            });
+            
+            // 如果用户注销过
+            if (app.globalData.userInfo.delFlag == '1') {
+              Dialog.alert({
+                title: '提示',
+                message: '您已注销, 无法登录!',
+              }).then(() => {
+                // on close
+              });
+            } else {
+              wx.reLaunch({
+                url: `/pages/${this.FIRST_PAGE}/${this.FIRST_PAGE}`,
+                complete: () => (this.isNavigating = false)
+              });
+            }
           }, 500);
           this.isFetchingUserInfo = false;
         },

@@ -56,10 +56,23 @@ Page({
   },
   // 记录前隐私调用准备 弹窗
   async checkSetting(autoStart) {
+    var that = this
     const settingRes = await wx.getSetting();
     if (!settingRes.authSetting["scope.userLocationBackground"]) {
-      await Dialog.confirm({ title: "提示", message: "请前往右上角菜单，进入”设置“->“位置信息”并选择“使用小程序时和离开后允许”" });
-      await wx.openSetting();
+      // await Dialog.confirm({ title: "提示", message: "请前往右上角菜单，进入”设置“->“位置信息”并选择“使用小程序时和离开后允许”" });
+      // await wx.openSetting();
+      Dialog.confirm({
+        title: '提示',
+        message: '请前往右上角菜单，进入”设置“->“位置信息”并选择“使用小程序时和离开后允许”',
+        confirmButtonText: "前往授权",
+        cancelButtonText: "直接开始"
+      })
+        .then(() => {
+          wx.openSetting();
+        })
+        .catch(() => {
+          that.showTip(autoStart)
+        });
     } else {
       autoStart && this.onTrack();
       wx.getLocation({
@@ -78,6 +91,20 @@ Page({
       });
     }
   },
+  showTip(autoStart){
+    console.log(autoStart);
+    var that = this
+    setTimeout(() => {
+      Dialog.alert({
+        title: '提示',
+        message: '因未授权实时位置或微信步数， 无法自动计算路程，结束行程后需手动输入',
+      }).then(() => {
+        console.log(autoStart);
+        autoStart && that.onTrack();
+      });
+    }, 1000);
+    
+  },
   // 刷新今日最新出行记录
   async refreshLastTrack() {
     // 今日出行记录
@@ -93,26 +120,32 @@ Page({
     return list;
   },
   // Start recording 记录值
-  startTracking: function () {
+  startTracking: async function () {
     let cnt = 10;
-    wx.startLocationUpdateBackground({
-      success: res => console.log("开启后台定位", res),
-      fail: err => console.error("开启后台定位失败", err)
-    });
-    wx.onLocationChange(async locationFn => {
-      cnt++;
-      // 此处可调节记录区间 单位->秒
-      if (cnt >= 10) {
-        cnt = 0;
-        await wx.cloud.callFunction({
-          name: "updateTrack",
-          data: {
-            curID: this.data.curID,
-            recordItem: { timestamps: new Date(), velos: locationFn.speed, points: new db.Geo.Point(locationFn.longitude, locationFn.latitude) }
-          }
-        });
-      }
-    });
+    // 权限未开就不用这个了, 会弹出授权弹窗
+    const settingRes = await wx.getSetting();
+    if (settingRes.authSetting["scope.userLocationBackground"]) {
+
+      wx.startLocationUpdateBackground({
+        success: res => console.log("开启后台定位", res),
+        fail: err => console.error("开启后台定位失败", err)
+      });
+      wx.onLocationChange(async locationFn => {
+        cnt++;
+        // 此处可调节记录区间 单位->秒
+        if (cnt >= 10) {
+          cnt = 0;
+          await wx.cloud.callFunction({
+            name: "updateTrack",
+            data: {
+              curID: this.data.curID,
+              recordItem: { timestamps: new Date(), velos: locationFn.speed, points: new db.Geo.Point(locationFn.longitude, locationFn.latitude) }
+            }
+          });
+        }
+      });
+    }
+    
   },
   onClickEvent() {
     if (this.data.updating) return wx.showToast({ title: "正在更新中，请勿重复操作!", icon: "none", duration: 2000 });
@@ -178,7 +211,32 @@ Page({
   // End recording
   endTrack() {
     const _this = this;
-
+    if (this.data.isManual && !this.data.dist) {
+      wx.showToast({
+        title: '请输入出行距离',
+        icon: 'none'
+      })
+      return
+    }
+    if (this.data.isManual && this.data.transport.length < 1) {
+      wx.showToast({
+        title: '请选择出行方式',
+        icon: 'none'
+      })
+      return
+    }
+    if (this.data.isManual && this.data.purpose.length < 1) {
+      wx.showToast({
+        title: '请选择出行目的地',
+        icon: 'none'
+      })
+      return
+    }
+    this.setData({showManualDialog: false})
+    wx.showLoading({
+      title: '记录中...',
+      mask: true
+    })
     // 该方法不支持Promise，仅支持回调
     wx.getWeRunData({
       complete: async res => {
@@ -186,13 +244,14 @@ Page({
         const { result: resp = null } = (await wx.cloud.callFunction({ name: "echo", data: { info: wx.cloud.CloudID(res.cloudID) } })) || {};
         const stepList = resp.info.data ? resp.info.data.stepInfoList : null;
 
-        const { latitude, longitude } = await getLocation();
+        const { latitude, longitude } = this.data.isManual ? {latitude: 0,longitude: 0 } : await getLocation();
         const {
           result: { carbSum, trackRes, speeds }
         } =
           (await wx.cloud.callFunction({
-            name: "endTrack",
+            name: this.data.isManual ? "endTrackManual" : "endTrack",
             data: {
+              dist: this.data.dist,
               stepList,
               latitude,
               longitude,
@@ -202,6 +261,7 @@ Page({
             }
           })) || {};
 
+          console.log("trackRes---", trackRes);
         try {
           const {
             data: { prediction }
@@ -229,9 +289,11 @@ Page({
             _this.setData({ updating: false });
           }, 500);
         }
-
+        wx.hideLoading()
         if (trackRes.stats.updated == 1) {
           console.log("行程记录成功！", trackRes);
+          // 判断是否是第一次记录, 第一次需要展示接口问卷
+          this.ifShowExportQuestion()
           wx.showToast({ title: "行程记录成功!", icon: "success", duration: 2000 });
           clearInterval(_this.data.myTimer);
 
@@ -262,10 +324,93 @@ Page({
       }
     });
   },
+  // 判断是否是第一次记录行程, 第一次需要展示出口问卷
+  ifShowExportQuestion(){
+    const db = wx.cloud.database();
+    db.collection('track')
+      .where({
+        _openid: app.globalData.openID
+      })
+      .count()
+      .then(res => {
+        console.log('已进行的行程记录数量：', res.total);
+        if (res.total < 100) {
+          // 打开问卷弹窗
+          this.setData({showExportDialog: true, exportQuestion: this.data.exportQuestion.map(q=>{
+            if (q.showFlag == "location_1") {
+              q.show = !this.data.isManual
+            }else if (q.showFlag == "location_0") {
+              q.show = this.data.isManual
+            }else {
+              q.show = true
+            }
+            return q
+          })})
+        }
+      })
+      .catch(err => {
+        console.error('查询失败：', err);
+      });
+  },
+  // 出口问卷改变radio
+  newChange(e){
+    var i = e.currentTarget.dataset.i
+    var exportQuestion = this.data.exportQuestion
+    var value = e.detail.value
+    if (value == "other") {
+      wx.showModal({
+        title: '请输入其它原因',
+        editable: true,
+        complete: (res) => {
+          if (res.confirm) {
+            exportQuestion[i].reply = res.content
+            exportQuestion[i].showOtherReply = true
+            this.setData({exportQuestion})
+          }
+        }
+      })
+    }else{
+      exportQuestion[i].reply = value
+      exportQuestion[i].showOtherReply = false
+      this.setData({exportQuestion})
+    }
+  },
+  // 保存出口问卷
+  saveExportQuestion(){
+    var that = this
+    var exportQuestion = this.data.exportQuestion.filter(q=>q.show).map(q=>{
+      delete q.showFlag
+      delete q.show
+      delete q.answer
+      delete q.otherAnswer
+      delete q.showOtherReply
+      return q
+    })
+
+    const db = wx.cloud.database();
+    db.collection('exportQuestions').add({
+      data: {
+        questions: exportQuestion
+      },
+      success: function(res) {
+        that.setData({showExportDialog: false})
+        // 前往奖品页面
+        wx.navigateTo({
+          url: '/pages/pointsPrize/pointsPrize',
+        })
+      },
+      fail: function(err) {
+        console.log(err);
+      }
+    });
+  },
   /**
    * 初始化本页面数据，此函数使用闭包，多次调用只会初始化一次
    */
   initData() {
+    // wx.navigateTo({
+    //   url: '/pages/pointsPrize/pointsPrize',
+    // })
     if (!this.initData.executed) {
       this.reloadData();
       this.initData.executed = true;
@@ -281,7 +426,7 @@ Page({
     this.setData({ brand: res.brand, model: res.model, system: res.system, version: res.version, platform: res.platform });
 
     // 检查用户是否禁用后台设置
-    this.checkSetting();
+    // this.checkSetting();
 
     // 渲染今日最新数据
     const track = await this.refreshLastTrack();
@@ -373,6 +518,14 @@ Page({
   //  functions for new UI starts here
   selectTab(event) {
     this.setData({ activeTab: event.currentTarget.dataset.tab });
+    if (event.currentTarget.dataset.tab == "rank") {
+      Dialog.alert({
+        title: '提示',
+        message: '该功能正在维护中',
+      }).then(() => {
+        // on close
+      });
+    }
   },
   onClickTransportation(e) {
     const arr = this.data.transport;
@@ -400,20 +553,43 @@ Page({
   onPurposeModalClose() {
     this.setData({ showPurposes: false, purpose: [] });
   },
-  finishAndEndTrack() {
-    const transportFinish = this.data.transport.length;
-    const purposeFinish = this.data.purpose.length;
-
-    if (!transportFinish) return this.setData({ show: true });
-    if (!purposeFinish) return this.setData({ showPurposes: true });
-    const finish = transportFinish && purposeFinish;
-
-    finish && this.endTrack();
+  onManualModalClose() {
+    this.setData({ showManualDialog: false });
+  },
+  onQuestionModalClose(){
+    this.setData({ showExportDialog: false });
+  },
+  async finishAndEndTrack() {
+    const settingRes = await wx.getSetting();
+    console.log(settingRes);
+    if (!settingRes.authSetting["scope.userLocationBackground"]) {
+      // 查询权限是否正常, 如不正常, 需要手动输入出行距离
+      this.setData({isManual: true, showManualDialog: true})
+    }else{
+      // 权限正常, 则正常使用
+      const transportFinish = this.data.transport.length;
+      const purposeFinish = this.data.purpose.length;
+  
+      if (!transportFinish) return this.setData({ show: true });
+      if (!purposeFinish) return this.setData({ showPurposes: true });
+      const finish = transportFinish && purposeFinish;
+  
+      finish && this.endTrack();
+    }
   },
   onConfirmTransport() {
     if (!this.data.transport.length) return wx.showToast({ icon: "none", title: "请选择出行方式" });
     this.setData({ show: false });
     this.finishAndEndTrack();
+  },
+  chooseTransport(){
+    this.setData({ show: true, showManualDialog: false });
+  },
+  choosePurpose(){
+    this.setData({ showPurposes: true, showManualDialog: false });
+  },
+  inputChange(e){
+    this.setData({dist: e.detail.value})
   },
   onConfirmPurpose() {
     if (!this.data.purpose.length) return wx.showToast({ icon: "none", title: "请选择出行方式" });

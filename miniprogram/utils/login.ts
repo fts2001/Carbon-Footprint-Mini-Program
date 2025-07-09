@@ -70,7 +70,8 @@ async function onHandleSignIn({
     error?: () => void | Promise<void> 
   } = {}) : Promise<boolean> {
   // 当前已登录则无需访问数据库
-  if (app.globalData.userInfo) {
+  if (app.globalData.userInfo?._openid) {
+    
     if (success) success();
     return true;
   } else {
@@ -83,6 +84,7 @@ async function onHandleSignIn({
         .where({ _openid: openID })
         .get();
 
+      console.log("我的用户信息",userInfoQuery);
       // 成功获取账号
       if (userInfoQuery.data.length === 1) {
         app.globalData.userInfo = userInfoQuery.data[0];

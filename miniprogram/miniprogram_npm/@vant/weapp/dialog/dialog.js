@@ -57,7 +57,8 @@ var Dialog = function (options) {
                 dialog.setData({ show: true });
             });
             queue.push(dialog);
-        } else {
+        }
+        else {
             console.warn('未找到 van-dialog 节点，请确认 selector 及 context 是否正确');
         }
     });

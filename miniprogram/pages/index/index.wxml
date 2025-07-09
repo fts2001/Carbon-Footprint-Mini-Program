@@ -26,3 +26,5 @@
     <text class="hint-text">你知道吗，每人每年少买一件不必要的衣服可节能约2.5千克标准煤，相应减排二氧化碳6.4千克。</text>
   </view>
 </view>
+
+<van-dialog id="van-dialog" />

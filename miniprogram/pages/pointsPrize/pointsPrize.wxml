@@ -1,0 +1,53 @@
+<scroll-view scroll-y style="height: 100vh">
+
+  <view style="content: '';overflow: hidden;"></view>
+  <view class="topTap">
+    <view class="tabs">
+      <view class="{{nowTab == '0'?'choosedTab':''}}" bind:tap="chooseTab" data-name="0">抽奖</view>
+      <view class="{{nowTab == '1'?'choosedTab':''}}" bind:tap="chooseTab" data-name="1">兑换</view>
+    </view>
+  </view>
+
+  <!-- 选择奖品 -->
+  <van-dialog use-slot title="请选择奖品" show="{{ showAward }}" showConfirmButton="{{false}}">
+    <view class="awardView">
+      <view class="awardItem" wx:for="{{awardList}}" wx:key="index" bind:tap="chooseAward" data-item="{{item}}">
+        <image src="{{item.imgUrl}}" mode="widthFix" style="width: 100%;" />
+        <view>{{item.name}}</view>
+      </view>
+    </view>
+  </van-dialog>
+
+  <!-- 抽奖轮盘 -->
+  <view wx:if="{{nowTab == '0'}}">
+
+    <view class="wheel-container">
+      <view class="wheel" style="{{rotate?'animation: rotate 0.5s linear infinite;':''}}">
+        <view class="wheel-item" wx:for="{{items}}" wx:key="index" style="transform: rotate({{item.angle}}deg);background: {{item.bacckground}};color: {{item.color}};">
+          <view class="wheel-item-content">{{item.name}}</view>
+        </view>
+      </view>
+
+      <image src="/asset/img/箭头-下.png" mode="widthFix" />
+
+      <view class="wheel-center">
+        <!-- <view style="color: #f9bc60;font-size: 40rpx;font-weight: 600;">1</view> -->
+        <view >开始抽奖</view>
+      </view>
+    </view>
+
+  </view>
+
+
+  <view wx:if="{{nowTab == '1'}}" style="height: 100vh;background: #97baaf;">
+
+    <view style="content: '';overflow: hidden;"></view>
+    <view class="duihuan">
+      <view>我的现金 </view>
+
+      <view class="myAward" bind:tap="showMyAward">查看我的奖品</view>
+    </view>
+  </view>
+
+</scroll-view>
+<van-dialog id="van-dialog" />

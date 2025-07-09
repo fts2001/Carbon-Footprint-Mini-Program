@@ -1,0 +1,15 @@
+<view style="height: 100vh; background: #97baaf;">
+
+  <view style="content: '';overflow: hidden;"></view>
+  <view style="padding: 30rpx 0;text-align: center;display: inline-block;width: 40vw;height: 50rpx;margin-left: 30vw;font-size: 40rpx;color: #FFF;background: #f9bc60;border-radius: 30rpx;box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;margin-top: 30rpx;">我的奖品</view>
+  
+  <scroll-view scroll-y style="height: calc(100vh - 170rpx); padding: 30rpx 60rpx;width: calc(100vw - 120rpx);">
+    <block wx:for="{{award}}" wx:key="index">
+      <view style="font-size: 50rpx;color: #FFF;display: flex;justify-content: space-between;align-items: center;">
+        <view>{{item.name}}</view>
+        <view style="font-size: 40rpx;background:#419f8c ;padding: 10rpx 60rpx;border-radius: 50rpx;">使用</view>
+      </view>
+      <view style="height: 30rpx; border-bottom: 1px solid gray;margin-bottom: 30rpx;"></view>
+    </block>
+</scroll-view>
+</view>
