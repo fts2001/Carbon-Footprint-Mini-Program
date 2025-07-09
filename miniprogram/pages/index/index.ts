@@ -125,7 +125,7 @@ Page({
       getApp().globalData.openID = openID;
 
       const userInfoQuery = await db.collection("userInfo").where({ _openid: openID }).get();
-
+      
       if (userInfoQuery.data.length === 1) {
         getApp().globalData.userInfo = userInfoQuery.data[0];
         wx.showModal({
