@@ -1,8 +1,18 @@
 // pages/center/center.ts
-import { logEvent } from '../../utils/log';
-import { updateUserData, onCheckSignIn } from '../../utils/login'
-import { updateColor } from '../../utils/colorschema'
-import { initChart } from '../../utils/chart'
+import {
+  logEvent
+} from '../../utils/log';
+import {
+  updateUserData,
+  onCheckSignIn
+} from '../../utils/login'
+import {
+  updateColor
+} from '../../utils/colorschema'
+import {
+  initChart
+} from '../../utils/chart'
+import Dialog from "../../miniprogram_npm/@vant/weapp/dialog/dialog"
 const app = getApp();
 Page({
 
@@ -13,8 +23,8 @@ Page({
     isFromShareTimeline: true,
     isAutoLogin: false,
     credit: 0,
-    carbSavings:0,
-    percent : 0,
+    carbSavings: 0,
+    percent: 0,
     background: null,
     ec: {
       onInit: initChart
@@ -40,6 +50,36 @@ Page({
     CoinRatio: 0,
 
   },
+  //用户注销
+  delUser() {
+    Dialog.confirm({
+        title: '提示',
+        message: '是否确认注销?',
+      })
+      .then(() => {
+        const db = wx.cloud.database();
+
+        db.collection('userInfo').where({
+          _openid: app.globalData.openID
+        }).update({
+          data: {
+            delFlag: true,
+          }
+        }).then(res => {
+          console.log('更新成功:', res);
+          app.globalData.userInfo = {}
+          wx.clearStorageSync()
+          wx.reLaunch({
+            url: '/pages/index/index',
+          })
+        }).catch(err => {
+          console.error('更新失败:', err);
+        });
+      })
+      .catch(() => {
+        // on cancel
+      });
+  },
   // updateCredit(){
   //   const db = wx.cloud.database()
   //   db.collection('lottery').where({
@@ -57,8 +97,8 @@ Page({
   //     }
   //   })
   // },
-  updateCredit(){
-    const info  = getApp().globalData.userInfo
+  updateCredit() {
+    const info = getApp().globalData.userInfo
     console.log('info of user', info)
     console.log('user Carb sum', info.carbSum)
     this.setData({
@@ -66,9 +106,9 @@ Page({
     })
   },
 
-  editProfile(){
+  editProfile() {
     onCheckSignIn({
-      success : () => {
+      success: () => {
         // wx.showModal({
         //   title: '您确认要修改您的个人信息吗？',
         //   content: '点击确定按钮以重新编辑您的个人信息',
@@ -81,17 +121,17 @@ Page({
         //   }
         // })
       },
-      failed : () => {
+      failed: () => {
         wx.reLaunch({
           url: '/pages/index/index',
         })
       }
-    }) 
+    })
   },
 
   toggleAutoLogin() {
     let localAutoLogin = wx.getStorageSync('autoLogin');
-    if (localAutoLogin !== ""){
+    if (localAutoLogin !== "") {
       wx.setStorageSync('autoLogin', !localAutoLogin)
       this.setData({
         isAutoLogin: !localAutoLogin,
@@ -103,7 +143,7 @@ Page({
       })
     }
   },
-  
+
   // initChart() {
   //   let chart;
   //   if (this.randerComponent) {
@@ -142,7 +182,7 @@ Page({
         console.log(e.currentTarget.dataset)
         let url = e.currentTarget.dataset.url
         let title = e.currentTarget.dataset.title
-        if(url!=null & title !=null){
+        if (url != null & title != null) {
           logEvent(title)
           wx.navigateTo({
             url: url,
@@ -165,7 +205,7 @@ Page({
       url: '/pages/aboutus/aboutus',
     })
   },
-  
+
   onPrivacy(e) {
     logEvent('Privacy Statement')
     wx.navigateTo({
@@ -183,7 +223,7 @@ Page({
       // this.initChart();
 
       let localAutoLogin = wx.getStorageSync('autoLogin');
-      if (localAutoLogin !== ""){
+      if (localAutoLogin !== "") {
         this.setData({
           isAutoLogin: localAutoLogin,
         })
@@ -199,17 +239,17 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onReady(){
-    
+  onReady() {
+
   },
   onLoad(options) {
-    
+
     // 页面交互设置
     wx.showShareMenu({
-      withShareTicket:true,
-      menus:["shareAppMessage","shareTimeline"]
+      withShareTicket: true,
+      menus: ["shareAppMessage", "shareTimeline"]
     })
-    
+
     wx.pageScrollTo({
       scrollTop: 0,
       duration: 0,
@@ -229,7 +269,7 @@ Page({
       this.setData({
         isFromShareTimeline: false
       });
-      
+
     }
   },
 
@@ -239,9 +279,9 @@ Page({
    */
   onShow() {
     this.getTabBar()
-    if(typeof this.getTabBar === 'function' && this.getTabBar()){
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({
-        selected:3
+        selected: 3
       })
     }
     // 朋友圈进来则不显示
@@ -254,10 +294,10 @@ Page({
 
     // 检查登录状态
     updateUserData();
-    
+
     onCheckSignIn({
-      message : '请您登录',
-      success : () => {
+      message: '请您登录',
+      success: () => {
         this.initData();
       }
     });
@@ -266,7 +306,7 @@ Page({
     this.randerComponent = this.selectComponent('#mychart-dom-area');
     wx.setNavigationBarTitle({
       title: '碳行家｜个人主页'
-    }) 
+    })
 
     logEvent('Center Page')
   },
@@ -274,15 +314,18 @@ Page({
   /**
    * 朋友圈分享
    */
-  onShareTimeline(){
+  onShareTimeline() {
     logEvent('Share App')
-    return{
-      title:'省碳领现金，快来试试吧～',
+    return {
+      title: '省碳领现金，快来试试吧～',
       imageUrl: "https://696c-iluvcarb-0gzvs45g82b57f98-1315168954.tcb.qcloud.la/logo/WechatIMG778.jpg?sign=c7c5732217972f1c9393850e9e040d70&t=1713096313",
-      query:`sharedFromID=${app.globalData.openID}&isFromShareTimeline=true`,
-      success: function(res){
+      query: `sharedFromID=${app.globalData.openID}&isFromShareTimeline=true`,
+      success: function (res) {
         console.log(res)
-      },fail: function (res){console.log(res)}
+      },
+      fail: function (res) {
+        console.log(res)
+      }
     }
   },
 
@@ -293,12 +336,12 @@ Page({
     logEvent('Share App')
     return {
       title: "省碳得现金，就用碳行家~",
-      path:`/pages/index/index?sharedFromID=${app.globalData.openID}`,
+      path: `/pages/index/index?sharedFromID=${app.globalData.openID}`,
       imageUrl: "https://696c-iluvcarb-0gzvs45g82b57f98-1315168954.tcb.qcloud.la/logo/WechatIMG778.jpg?sign=c7c5732217972f1c9393850e9e040d70&t=1713096313",
-      success: function(res){
+      success: function (res) {
         console.log(res.shareTickets[0])
       },
-      fail:function(res){
+      fail: function (res) {
         console.log('share failed')
       }
     }

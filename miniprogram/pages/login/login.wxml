@@ -132,11 +132,58 @@
 
 <!-- 新的注册页面 -->
 <view style="height: 100vh;">
+<<<<<<< Updated upstream
   <view>
     <modal title="知情同意" confirm-text="同意" cancel-text="取消" hidden="{{modalHidden}}" bindconfirm="modalConfirm" bindcancel="modalCancel">
       <scroll-view scroll-y="true" style="height:300px ; text-align: center;">
         <text>\n隐私声明
 
+=======
+
+  <!-- 授权页面的背景图片 -->
+  <image src="cloud://iluvcarb-0gzvs45g82b57f98.696c-iluvcarb-0gzvs45g82b57f98-1315168954/loginBackground/background1.png" style="position: fixed;left: 0;top: 0;width: 100vw;height: 100vh; z-index: 2;" wx:if="{{loginType === 0}}" bindload="showAuthorizeDialog" />
+  <image src="cloud://iluvcarb-0gzvs45g82b57f98.696c-iluvcarb-0gzvs45g82b57f98-1315168954/loginBackground/background2.png" style="position: fixed;left: 0;top: 0;width: 100vw;height: 100vh; z-index: 2;" wx:if="{{loginType === 1}}" bindload="showAuthorizeDialog" />
+
+  <!-- 提示弹窗 -->
+  <van-dialog use-slot title="即将申请权限" show="{{ authorizeDialog }}" overlay="{{false}}" bind:confirm="getAuthorize" class="authorizeDialog">
+    <view style="padding: 20rpx; text-align: center;line-height: 60rpx;">
+      <view>依据《中华人民共和国个人信息保护法》《环境保护法》相关规定，为履行碳足迹监测公共服务职责，请您授权：</view>
+      <block wx:if="{{}}">
+        <view>实时位置权限用于行程记录</view>
+        <view>微信运动步数权限用于出行方式分析</view>
+        <view>消息通知权限用于行程记录消息通知</view>
+      </block>
+      <block wx:else>
+        <view>实时位置权限用于实时定位记录绿色出行轨迹</view>
+        <view>微信运动步数权限用于同步微信步数计算减排量</view>
+        <view>消息通知权限用于开通通知接收积分到账提醒</view>
+      </block>
+      <view>不授权不影响参与抽奖</view>
+    </view>
+  </van-dialog>
+
+  <!-- 模拟消息订阅的弹窗 -->
+  <van-popup show="{{ showPopup }}" position="bottom" custom-style="height: 26%;" bind:close="onClosePopup" style="position: relative;">
+    <view style="padding: 50rpx 30rpx 30rpx;background: #ededed;height: 100%;">
+      <view style="display: flex; align-items: center;">
+        <image src="cloud://iluvcarb-0gzvs45g82b57f98.696c-iluvcarb-0gzvs45g82b57f98-1315168954/logo/WechatIMG778.jpg" style="width: 50rpx;height: 50rpx;border-radius: 50%;margin-right: 20rpx;" />
+        <text style="font-size: 28rpx;">碳行家 申请</text>
+      </view>
+      <view style="padding-top: 60rpx;">需要获取消息通知权限</view>
+      <view class="authorizeBtn">
+        <view bind:tap="onClosePopup">拒绝</view>
+        <view bind:tap="submitSimulateAuthorize">允许</view>
+      </view>
+    </view>
+  </van-popup>
+
+  <!-- 知情同意书 -->
+  <view>
+    <modal title="知情同意" confirm-text="同意" cancel-text="取消" hidden="{{modalHidden}}" bindconfirm="modalConfirm" bindcancel="modalCancel">
+      <scroll-view scroll-y="true" style="height:300px ; text-align: center;">
+        <text>\n隐私声明
+
+>>>>>>> Stashed changes
           一、前言\n
 
           欢迎使用“碳行家”，这是一款专注于个人碳足迹可视化的小程序。作为开发者，我们深知信息安全的重要性。此声明旨在帮助您了解我们如何收集、使用、存储和保护您的个人信息。\n
@@ -164,6 +211,10 @@
     </modal>
   </view>
 
+<<<<<<< Updated upstream
+=======
+  <!-- 入口选择题 -->
+>>>>>>> Stashed changes
   <view>
     <view style="color: #FFF;background:#419f8c; font-size: 40rpx;text-align: center;line-height: 90rpx;height: 90rpx;">
       注册
@@ -174,7 +225,11 @@
         <text>您的性别: </text>
         <radio-group class="radio-group" bindchange="newChange" data-name="sex">
           <label class="radio" wx:for="{{sexArr}}" wx:key="index">
+<<<<<<< Updated upstream
             <radio value="{{item.name}}"/>{{item.value}}
+=======
+            <radio value="{{item.name}}" />{{item.value}}
+>>>>>>> Stashed changes
           </label>
         </radio-group>
       </view>
@@ -183,7 +238,11 @@
         <text>您的年龄: </text>
         <radio-group class="radio-group" bindchange="newChange" data-name="age">
           <label class="radio" wx:for="{{ageArr}}" wx:key="index">
+<<<<<<< Updated upstream
             <radio value="{{item}}"/>{{item}}
+=======
+            <radio value="{{item}}" />{{item}}
+>>>>>>> Stashed changes
           </label>
         </radio-group>
       </view>
@@ -192,7 +251,11 @@
         <text>您的最高学历: </text>
         <radio-group class="radio-group" bindchange="newChange" data-name="grad">
           <label class="radio" wx:for="{{gradArr}}" wx:key="index">
+<<<<<<< Updated upstream
             <radio value="{{item}}"/>{{item}}
+=======
+            <radio value="{{item}}" />{{item}}
+>>>>>>> Stashed changes
           </label>
         </radio-group>
       </view>
@@ -201,7 +264,11 @@
         <text>您的职业: </text>
         <radio-group class="radio-group" bindchange="newChange" data-name="occupation">
           <label class="radio" wx:for="{{occupationArr}}" wx:key="index">
+<<<<<<< Updated upstream
             <radio value="{{item}}"/>{{item}}
+=======
+            <radio value="{{item}}" />{{item}}
+>>>>>>> Stashed changes
           </label>
         </radio-group>
       </view>
@@ -211,15 +278,27 @@
         <view style="height: 15rpx;"></view>
         <radio-group class="radio-group" bindchange="newChange" data-name="income">
           <label class="radio" wx:for="{{incomeArr}}" wx:key="index">
+<<<<<<< Updated upstream
             <radio value="{{item}}"/>{{item}}
+=======
+            <radio value="{{item}}" />{{item}}
+>>>>>>> Stashed changes
           </label>
         </radio-group>
       </view>
 
       <view>
+<<<<<<< Updated upstream
         <text class="finish" bind:tap="getAuthorize">完成注册</text>
+=======
+        <text class="finish" bind:tap="getLoginType">完成注册</text>
+>>>>>>> Stashed changes
       </view>
 
     </scroll-view>
   </view>
+<<<<<<< Updated upstream
 </view>
+=======
+</view>
+>>>>>>> Stashed changes

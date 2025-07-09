@@ -58,8 +58,10 @@
 
     <view class='menu-bar' bindtap='onSurvey'>关于我们</view>
     <view class='menu-bar' bindtap="onPrivacy">隐私声明</view>
+    <view class='menu-bar' bindtap="delUser">注销</view>
   </block>
 </view>
 
 
 <tab-bar id="tabBar"></tab-bar>
+<van-dialog id="van-dialog" />

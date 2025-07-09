@@ -1,183 +1,226 @@
 <wxs src="./home.wxs" module="m1"></wxs>
 <view class="page-background" style="background: #97baaf">
 
-<view class="header-image">
+  <view class="header-image">
     <image class="people-image" src="../../asset/img/sus_people.jpg" />
-</view>
+  </view>
 
-<view class="selection-bar">
+  <view class="selection-bar">
     <button class="tab {{activeTab === 'trip' ? 'active' : ''}}" bindtap="selectTab" data-tab="trip">出行</button>
-    
+
     <button class="tab tab-record {{activeTab === 'record' ? 'active' : ''}}" bindtap="selectTab" data-tab="record">
-        <text>记录</text>
-        <view class="point" wx:if="{{showPoint}}"></view>
+      <text>记录</text>
+      <view class="point" wx:if="{{showPoint}}"></view>
     </button>
     <button class="tab {{activeTab === 'rank' ? 'active' : ''}}" bindtap="selectTab" data-tab="rank">排名</button>
-</view>
+  </view>
 
-<!-- when selectedTab is trip -->
-<view wx:if="{{activeTab === 'trip'}}">
+  <!-- when selectedTab is trip -->
+  <view wx:if="{{activeTab === 'trip'}}">
     <view wx:if="{{!isTracking}}">
-        <view class="prompt-container">
-            <text class="prompt-title">开始记录你的低碳出行吧</text>
-            <text class="prompt-content">点击下方开始记录出行的行程，行程结束后小程序会根据您的出行数据计算省碳量与碳排放</text>
-        </view>
+      <view class="prompt-container">
+        <text class="prompt-title">开始记录你的低碳出行吧</text>
+        <text class="prompt-content">点击下方开始记录出行的行程，行程结束后小程序会根据您的出行数据计算省碳量与碳排放</text>
+      </view>
 
-        <view class="btn-container" bindtap="onClickEvent">
-            <image src="../../asset/img/start.svg" class="btn-img" />
-        </view>
+      <view class="btn-container" bindtap="onClickEvent">
+        <image src="../../asset/img/start.svg" class="btn-img" />
+      </view>
     </view>
 
     <view wx:if="{{isTracking}}">
-        <view class="record-container">
-            <text class="record-duration">{{ m1.convertTrackStamp(duration, "duration") }}</text>
-            <text class="record-duration-label">记录时长</text>
-            <text class="record-start">{{startNowTime}}</text>
-            <text class="record-start-label">开始时间</text>
-        </view>
+      <view class="record-container">
+        <text class="record-duration">{{ m1.convertTrackStamp(duration, "duration") }}</text>
+        <text class="record-duration-label">记录时长</text>
+        <text class="record-start">{{startNowTime}}</text>
+        <text class="record-start-label">开始时间</text>
+      </view>
 
-        <view class="btn-container" bindtap="onClickEvent">
-            <image class="btn-img" src="../../asset/img/stop.svg" />
-        </view>
+      <view class="btn-container" bindtap="onClickEvent">
+        <image class="btn-img" src="../../asset/img/stop.svg" />
+      </view>
     </view>
-</view>
+  </view>
 
-<!-- when record -->
-<view wx:if="{{activeTab === 'record'}}">
+  <!-- when record -->
+  <view wx:if="{{activeTab === 'record'}}">
     <view class="record-container">
-        <view wx:for="{{todayRecordList}}" wx:for-index="i" wx:key="i" class="listItem" data-item="{{item}}" bindtap="onClickTrackCard">
-            <image class="icon-placeholder" src="{{ m1.getTransportImage(item.calcTransport) }}" mode="aspectFit" />
-            <view class="item-details">
-                <view class="transport-method">{{ item.transport }}</view>
-                <view class="duration">时长: <text>{{ m1.convertStamp(item.endTime - item.date, "duration") }}</text></view>
-                <view class="carbon-saving">省碳量: <text>{{ item.carbSum }} g</text></view>
-                
-                <view class="point" wx:if="{{!item.purpose.length}}"></view>
-                <view wx:if="{{item.transport && item.purpose}}">
-                    <view class="purpose">出行方式: <text>{{ item.transport }}</text></view>
-                    <view class="purpose">出行目的: <text>{{ item.purpose }}</text></view>
-                </view>
-                <view wx:else class="purpose">记录提前终止</view>
-            </view>
+      <view wx:for="{{todayRecordList}}" wx:for-index="i" wx:key="i" class="listItem" data-item="{{item}}" bindtap="onClickTrackCard">
+        <image class="icon-placeholder" src="{{ m1.getTransportImage(item.calcTransport) }}" mode="aspectFit" />
+        <view class="item-details">
+          <view class="transport-method">{{ item.transport }}</view>
+          <view class="duration">时长: <text>{{ m1.convertStamp(item.endTime - item.date, "duration") }}</text></view>
+          <view class="carbon-saving">省碳量: <text>{{ item.carbSum }} g</text></view>
+
+          <view class="point" wx:if="{{!item.purpose.length}}"></view>
+          <view wx:if="{{item.transport && item.purpose}}">
+            <view class="purpose">出行方式: <text>{{ item.transport }}</text></view>
+            <view class="purpose">出行目的: <text>{{ item.purpose }}</text></view>
+          </view>
+          <view wx:else class="purpose">记录提前终止</view>
         </view>
+      </view>
     </view>
 
-        <view wx:if="{{!!showSchedules.length}}" class="schedules">
-          <view class="heat-title">
-            本次出行分析：
-          </view>
+    <view wx:if="{{!!showSchedules.length}}" class="schedules">
+      <view class="heat-title">
+        本次出行分析：
+      </view>
 
-          <view class="chart">
-            <view wx:for="{{showSchedules}}" wx:key="value" class="{{'chart-item ' + item.color}}" style="width: {{ item.percentage }}">{{ item.label + item.percentage }}</view>
-          </view>
-        </view>
-</view>
+      <view class="chart">
+        <view wx:for="{{showSchedules}}" wx:key="value" class="{{'chart-item ' + item.color}}" style="width: {{ item.percentage }}">{{ item.label + item.percentage }}</view>
+      </view>
+    </view>
+  </view>
 
-<!-- when rank -->
-<view wx:if="{{activeTab === 'rank'}}" class="rank">
+  <!-- when rank -->
+  <view wx:if="{{activeTab === 'rank' && false}}" class="rank">
     <view class="legend">本周累计省碳排名</view>
 
     <!-- Current User Entry -->
     <view class="user-container">
-        <!-- Rank and Carbon Saving captions -->
-        <view class="user-caption">
-            <text class="caption-text">排名</text>
-            <text class="caption-text">省碳量</text>
-        </view>
+      <!-- Rank and Carbon Saving captions -->
+      <view class="user-caption">
+        <text class="caption-text">排名</text>
+        <text class="caption-text">省碳量</text>
+      </view>
 
-        <!-- Display the current user's rank, avatar, nickname, and saving -->
-        <view class="user-item">
-            <text class="user-rank">{{myranking === "未上榜" ? "?" : myranking}}</text>
-            <image class="profile-image" src="{{userInfo.avatar}}" />
-            <view class="user-info">
-                <text class="user-name">{{userInfo.basicInfo.nickname}}</text>
-            </view>
-            <text class="carbon-saving">{{mysaving === "<1" ? "?" : mysaving}}g</text>
+      <!-- Display the current user's rank, avatar, nickname, and saving -->
+      <view class="user-item">
+        <text class="user-rank">{{myranking === "未上榜" ? "?" : myranking}}</text>
+        <image class="profile-image" src="{{userInfo.avatar}}" />
+        <view class="user-info">
+          <text class="user-name">{{userInfo.basicInfo.nickname}}</text>
         </view>
+        <text class="carbon-saving">{{mysaving === "<1" ? "?" : mysaving}}g</text>
+      </view>
     </view>
 
     <view class="rank-container">
-        <block wx:for="{{users}}" wx:key="id">
-            <view class="user-item">
-                <!-- Rank on the far left -->
-                <text class="user-rank">{{item.rank}}</text>
+      <block wx:for="{{users}}" wx:key="id">
+        <view class="user-item">
+          <!-- Rank on the far left -->
+          <text class="user-rank">{{item.rank}}</text>
 
-                <!-- User avatar -->
-                <image class="profile-image" src="{{item.avatar}}" />
+          <!-- User avatar -->
+          <image class="profile-image" src="{{item.avatar}}" />
 
-                <!-- User nickname -->
-                <view class="user-info">
-                    <text class="user-name">{{item.basicInfo.nickname}}</text>
-                </view>
+          <!-- User nickname -->
+          <view class="user-info">
+            <text class="user-name">{{item.basicInfo.nickname}}</text>
+          </view>
 
-                <!-- Carbon saving on the far right -->
-                <text class="carbon-saving">{{item.totalCarbSum}}g</text>
-            </view>
-        </block>
+          <!-- Carbon saving on the far right -->
+          <text class="carbon-saving">{{item.totalCarbSum}}g</text>
+        </view>
+      </block>
     </view>
-</view>
+  </view>
 
-<van-dialog
-  use-slot
-  width="680rpx"
-  show="{{ show }}"
-  show-confirm-button="{{false}}"
-  bind:close="onTransportModalClose"
->
+  <van-dialog use-slot width="680rpx" show="{{ show }}" show-confirm-button="{{false}}" bind:close="onTransportModalClose">
 
-  <view class="vant-dialog">
-    <view class="header">
-        <image class="close-icon" src="../../asset/img/close.svg" bindtap="onTransportModalClose"/>
+    <view class="vant-dialog">
+      <view class="header">
+        <image class="close-icon" src="../../asset/img/close.svg" bindtap="onTransportModalClose" />
         <view class="title">出行方式</view>
         <view class="desc">可多选</view>
-    </view>
+      </view>
 
-    <view class="body">
+      <view class="body">
         <view wx:for="{{transportations}}" wx:for-index="i" wx:key="label" data-tp="{{item.label}}" bindtap="onClickTransportation" class="{{  m1.getActiveClassName(transport,item.label) }}">
-          <image class="icon" src="{{item.icon}}"  />
-        <view class="label">{{item.label}}</view>
+          <image class="icon" src="{{item.icon}}" />
+          <view class="label">{{item.label}}</view>
         </view>
-    </view>
+      </view>
 
-    <view class="footer">
+      <view class="footer">
         <view class="btn" bindtap="onConfirmTransport">
-        确定
+          确定
+        </view>
+      </view>
     </view>
-    </view>
-  </view>
-</van-dialog>
+  </van-dialog>
 
 
-<van-dialog
-  use-slot
-  width="680rpx"
-  show="{{ showPurposes }}"
-  show-confirm-button="{{false}}"
-  bind:close="onPurposeModalClose"
->
-  <view class="vant-dialog">
-    <view class="header">
-        <image class="close-icon" src="../../asset/img/close.svg" bindtap="onPurposeModalClose"/>
+  <van-dialog use-slot width="680rpx" show="{{ showPurposes }}" show-confirm-button="{{false}}" bind:close="onPurposeModalClose">
+    <view class="vant-dialog">
+      <view class="header">
+        <image class="close-icon" src="../../asset/img/close.svg" bindtap="onPurposeModalClose" />
         <view class="title">出行目的</view>
         <view class="desc">可多选</view>
-    </view>
+      </view>
 
-    <view class="body-purposes">
+      <view class="body-purposes">
         <view wx:for="{{purposes}}" wx:for-index="i" wx:key="label" data-purpose="{{item.label}}" bindtap="onClickPurpose" class="{{ m1.getActiveClassName(purpose,item.label) }}">
-          <image class="icon" src="{{item.icon}}"  />
-        <view class="label">{{item.label}}</view>
+          <image class="icon" src="{{item.icon}}" />
+          <view class="label">{{item.label}}</view>
         </view>
-    </view>
+      </view>
 
-    <view class="footer">
+      <view class="footer">
         <view class="btn" bindtap="onConfirmPurpose">
-        确定
+          确定
+        </view>
+      </view>
     </view>
-    </view>
-  </view>
-</van-dialog>
+  </van-dialog>
 
 </view>
 
+<van-dialog use-slot width="680rpx" show="{{ showManualDialog }}" show-confirm-button="{{false}}" bind:close="onManualModalClose">
+  <view class="vant-dialog">
+    <view class="header" style="height: 70rpx;">
+      <image class="close-icon" src="../../asset/img/close.svg" bindtap="onManualModalClose" />
+    </view>
 
+    <view>
+      <view class="manualText">你的出行距离(请输入数字, 单位㎞)</view>
+      <input type="number" class="manualInput" value="{{dist}}" bindinput="inputChange" />
+
+      <view class="manualBtn" bind:tap="chooseTransport">{{transport.length>0 ?transport : "请选择您的出行方式"}}</view>
+      <view class="manualBtn" bind:tap="choosePurpose">{{purpose.length>0 ?purpose:"请选择您的出行目的"}}</view>
+    </view>
+
+    <view class="footer">
+      <view class="btn" bindtap="endTrack">
+        确定
+      </view>
+    </view>
+  </view>
+</van-dialog>
+
+<van-dialog use-slot width="680rpx" show="{{ showExportDialog }}" show-confirm-button="{{false}}" bind:close="onQuestionModalClose">
+  <view class="vant-dialog">
+    <view class="header" style="height: 70rpx;">
+      <image class="close-icon" src="../../asset/img/close.svg" bindtap="onQuestionModalClose" />
+    </view>
+
+    <view>
+        <scroll-view scroll-y style="height: calc(100vh - 500rpx);text-align: left;line-height: 70rpx;">
+
+          <view class='itemClass2' wx:for="{{exportQuestion}}" wx:key="index" wx:if="{{item.show}}">
+            <text>{{item.question}}</text>
+            <view style="height: 15rpx;"></view>
+            <radio-group class="radio-group" bindchange="newChange" data-i="{{index}}">
+              <view class="radio" wx:for="{{item.answer}}" wx:key="index">
+                <radio value="{{item}}" />{{item}}
+              </view>
+              <view class="radio" wx:if="{{item.otherAnswer}}">
+                <radio value="other" /> {{item.otherAnswer}}: <text wx:if="{{item.showOtherReply}}">{{item.reply}}</text>
+              </view>
+            </radio-group>
+          </view>
+
+        </scroll-view>
+      </view>
+
+    <view class="footer">
+      <view class="btn" bindtap="saveExportQuestion">
+        确定
+      </view>
+    </view>
+  </view>
+</van-dialog>
+
+<van-dialog id="van-dialog" />
 <tab-bar id="tabBar"></tab-bar>

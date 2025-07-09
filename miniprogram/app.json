@@ -16,6 +16,8 @@
     "pages/quiz/quiz",
     "pages/notification/notification",
     "pages/prizeCenter/prizeCenter",
+    "pages/pointsPrize/pointsPrize",
+    "pages/pointsPrize/myAward/myAward",
     "pages/merchDetail/merchDetail",
     "pages/aboutus/aboutus",
     "pages/track/track",

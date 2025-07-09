@@ -70,7 +70,8 @@ async function onHandleSignIn({
     error?: () => void | Promise<void> 
   } = {}) : Promise<boolean> {
   // 当前已登录则无需访问数据库
-  if (app.globalData.userInfo) {
+  if (app.globalData.userInfo?._openid) {
+    
     if (success) success();
     return true;
   } else {
