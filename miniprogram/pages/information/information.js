@@ -13,11 +13,13 @@ Page({
   data: {
     /** 常量数据 defaultData ，这个是给UI访问的, 默认直接用 defaultData 而不是 this.data.defaultData */
     defaultData,
-
+    
     /** 页面基本信息 */
     background: null,
     isLoading: false,
 
+    /** 发钱API用户ID */
+    u_openid : null,
     /** UI 相关 */
     UISelectedTag: '',
     UIArticleTags: ['综合'],
@@ -782,6 +784,14 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    
+    console.log('the u_openid is ',options.u_openid)
+    this.setData({
+      u_openid:options.u_openid
+    })
+    if(options.u_openid){
+      this.handleSendEntranceCash(options.u_openid)
+    }
     // 转发朋友圈链接，导航到登录页面
     if (options.isFromShareTimeline) {
       wx.redirectTo({
@@ -872,4 +882,98 @@ Page({
       }
     }
   },
+
+  async handleSendEntranceCash(u_openid) {
+  const openid = app.globalData.openID;
+  const db = wx.cloud.database();
+  const _ = db.command;
+
+  if (!openid || !u_openid) {
+    return;
+  }
+
+  try {
+    // 检查是否已发放
+    const entryCheck = await db.collection("entryList").doc(openid).get()
+      .then(res => res.data)
+      .catch(() => null);
+
+    if (entryCheck) {
+      wx.showModal({
+        title: "提示",
+        content: "您已领取过红包",
+        showCancel: false
+      });
+      return;
+    }
+
+    // 写入领取记录
+    await db.collection("entryList").add({
+      data: {
+        _id: openid,
+        u_openid,
+        date: new Date()
+      }
+    });
+
+    // 获取奖励金额等信息
+    const transferMoneyData = await db.collection("transferMoney").get();
+    const transferMoney = transferMoneyData.data[0];
+
+    if (!transferMoney || !transferMoney.active) {
+      wx.showModal({
+        title: "抱歉",
+        content: "现金奖励未启用",
+        showCancel: false
+      });
+      return;
+    }
+
+    const money = transferMoney.entrance.money;
+    const remark = transferMoney.entrance.info;
+
+    // 调用云函数发钱
+    wx.cloud.callFunction({
+      name: 'sendCashReward',
+      data: {
+        u_openid,
+        type: '0',
+        money: String(money),
+      },
+      success: (res) => {
+        if (res.result && res.result.success) {
+          wx.showModal({
+            title: "恭喜！",
+            content: "低碳现金红包已发放",
+            showCancel: false
+          });
+        } else {
+          wx.showToast({
+            title: '发放失败，请稍后再试',
+            icon: 'error',
+            duration: 1500
+          });
+        }
+      },
+      fail: (err) => {
+        console.error('云函数调用失败:', err);
+        wx.showToast({
+          title: '请求失败',
+          icon: 'error',
+          duration: 1500
+        });
+      }
+    });
+
+  } catch (err) {
+    console.error('处理失败:', err);
+    wx.showModal({
+      title: "错误",
+      content: err.message || "发生未知错误",
+      showCancel: false
+    });
+  }
+}
+
+
 })
