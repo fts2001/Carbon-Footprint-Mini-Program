@@ -1,5 +1,4 @@
 {
   "usingComponents": {},
-  "disableScroll": true,
-  "enablePullDownRefresh": true
+  "disableScroll": true
 }

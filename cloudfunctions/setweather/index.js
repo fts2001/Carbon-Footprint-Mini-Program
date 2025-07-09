@@ -18,6 +18,7 @@ exports.main = async (event, context) => {
     const cityRes = await axios.get(geoApiFullUrl);
     const cityId = cityRes.data.location[0].id;
     const cityName = cityRes.data.location[0].adm2 + cityRes.data.location[0].name;
+    const provinceName = cityRes.data.location[0].adm1;
 
     const airRes = await axios.get(airApiUrl + cityId);
     const airQuality = airRes.data.now.aqi;
@@ -40,7 +41,8 @@ exports.main = async (event, context) => {
     const weather = weatherRes.data.now;
 
     return {
-      cityName,
+      provinceName: provinceName,
+      cityName: cityName,
       aqi: airQuality,
       category: newCategory,
       weather,
