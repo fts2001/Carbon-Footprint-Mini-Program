@@ -334,7 +334,7 @@ Page({
       .count()
       .then(res => {
         console.log('已进行的行程记录数量：', res.total);
-        if (res.total < 100) {
+        if (res.total < 1) {
           // 打开问卷弹窗
           this.setData({showExportDialog: true, exportQuestion: this.data.exportQuestion.map(q=>{
             if (q.showFlag == "location_1") {

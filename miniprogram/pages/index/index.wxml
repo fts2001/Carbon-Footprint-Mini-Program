@@ -27,7 +27,5 @@
   </view>
 </view>
 
-<<<<<<< Updated upstream
-=======
+
 <van-dialog id="van-dialog" />
->>>>>>> Stashed changes

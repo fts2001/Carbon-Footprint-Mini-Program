@@ -60,15 +60,11 @@ Page({
     occupationArr: ["学生", "企业职工", "公务员", "事业单位人员", "自由职业者", "服务行业从业者", "农业或制造业", "其它"],
     occupation: "",
     incomeArr: ["不愿透露", "3,000元及以下", "3,001~5,000元", "5,001~12,000元", "12,001~30,000元", "30,001元及以上"],
-<<<<<<< Updated upstream
-    income: ""
-=======
     income: "",
     loginType: "", //登录类型,0/1分别代表的是华表版本和环境版本 
     authorizeDialog: false, //提示权限的弹窗
     showPopup: false, //展示模拟授权消息订阅的弹窗
     messageAuthorize: false, //消息订阅权限
->>>>>>> Stashed changes
   },
 
   // 改变属性
@@ -80,10 +76,6 @@ Page({
     data[name] = value
     this.setData(data)
   },
-<<<<<<< Updated upstream
-
-  // 申请授权
-=======
   // 1. 先随机一下登录类型
   getLoginType(){
     this.setData({loginType: Math.random() < 0.5 ? 0 : 1})
@@ -93,7 +85,6 @@ Page({
     this.setData({authorizeDialog: true})
   },
   // 3. 然后申请授权
->>>>>>> Stashed changes
   getAuthorize() {
     // 权限列表
     var scopes = [{ scope: "scope.userLocation", content: "实时位置权限: 用于行程轨迹记录" },
@@ -103,40 +94,11 @@ Page({
       promises.push(this.authorize(scope))
     });
     Promise.all(promises).then(res => {
-<<<<<<< Updated upstream
-      // 存在未授权的数据, 提示前往授权
-      if ((res as { success: any }[]).filter(r => !r.success).length > 0) {
-        let content = '您需要以下权限: \n';
-        (res as { data: any, success: any }[]).forEach(r => {
-          
-          content += (r.success? '' : (r.data.content + '\n'))
-        });
-        wx.showModal({
-          title: "权限设置",
-          content: content,
-          cancelText: "暂不授权",
-          confirmText: "去授权",
-          success: (res) => {
-            if (res.confirm) {
-              wx.openSetting()
-            } else if (res.cancel) {
-              this.finishLogin()
-            }
-          }
-        })
-      } else {
-        this.finishLogin()
-      }
-    })
-  },
-  // 申请授权
-=======
-      // 前两个授权加载完成后, 还要模拟是否授权消息订阅
+      // 前两个授权加载完成之后，还要模拟是否授权取消订阅
       this.simulateAuthorize()
     })
   },
   // 3_1. 申请授权的子接口
->>>>>>> Stashed changes
   authorize(data) {
     return new Promise((resolve, reject) => {
       wx.getSetting({
@@ -158,13 +120,6 @@ Page({
       })
     })
   },
-<<<<<<< Updated upstream
-
-  // 改变后的登录接口
-  async finishLogin() {
-    console.log("AAA");
-    
-=======
   // 4. 需要模拟授权消息订阅
   simulateAuthorize(){
     this.setData({showPopup: true})
@@ -183,7 +138,6 @@ Page({
   // 5. 改变后的登录接口
   async finishLogin() {
 
->>>>>>> Stashed changes
     this.setData({ nickname: "微信用户" })
     if (!this.validateForm() || app.globalData.userInfo) {
       return;
@@ -203,19 +157,7 @@ Page({
       grad: this.data.grad,
       occupation: this.data.occupation,
       income: this.data.income,
-<<<<<<< Updated upstream
       loginType: Math.random() < 0.5 ? 0 : 1,
-      userLocation: false,
-      werun: false,
-    };
-    await wx.getSetting().then(res=>{
-      basicInfo.userLocation = res.authSetting['scope.userLocation'] || false
-      basicInfo.werun = res.authSetting['scope.werun'] || false
-    })
-    console.log("basicInfo---", basicInfo);
-    
-=======
-      loginType: this.data.loginType,
       authorize: {
         userLocation: false,
         werun: false,
@@ -228,7 +170,6 @@ Page({
     })
     console.log("basicInfo---", basicInfo);
 
->>>>>>> Stashed changes
     const carbSum = 0;
     const testGroup = Math.floor(Math.random() * Object.keys(app.constData.TOTAL_TEST_GROUP_COUNT).length) + 1;
     let avatar = this.data.avatarUrl === unknownAvatarUrl ? defaultAvatarUrl : this.data.avatarUrl;
@@ -500,104 +441,78 @@ Page({
 
         if (res.result && typeof res.result === "object" && "success" in res.result) {
           if (res.result.success) {
-            // this.transferEntranceMoney({
-            //   complete: () => {
-            //     wx.reLaunch({
-            //       url: "/pages/authentication/authentication"
-            //     });
-            //   }
-            // });
-            wx.reLaunch({
-              url: "/pages/authentication/authentication"
-            })
+            this.transferEntranceMoney({
+              complete: () => {
+                wx.reLaunch({
+                  url: "/pages/authentication/authentication"
+                });
+              }
+            });
           }
         }
       }
     });
   },
 
-  // async transferEntranceMoney({ complete }: { complete?: () => void }) {
-  //   if (!this.transferEntranceMoney.lock) {
-  //     this.transferEntranceMoney.lock = true;
+   async transferEntranceMoney({ complete }: { complete?: () => void }) {
+     if (!this.transferEntranceMoney.lock) {
+       this.transferEntranceMoney.lock = true;
 
-  //     // transfer entrance money
-  //     const db = wx.cloud.database();
-  //     const transferMoney = (await db.collection("transferMoney").get()).data[0];
+       // transfer entrance money
+       const db = wx.cloud.database();
+       const transferMoney = (await db.collection("transferMoney").get()).data[0];
 
-  //     const _openid = app.globalData.openID;
-  //     const active = transferMoney.active;
-  //     const money = transferMoney.entrance.money;
-  //     const remark = transferMoney.entrance.info;
+       const _openid = app.globalData.openID;
+       const active = transferMoney.active;
+       const money = transferMoney.entrance.money;
+       const remark = transferMoney.entrance.info;
 
-<<<<<<< Updated upstream
-  //     // 启用
-  //     if (!active) {
-  //       await transfer({
-  //         money,
-  //         remark,
-  //         _openid,
-=======
-      // 启用
-      if (!active) {
-        await transfer({
-          money,
-          remark,
-          _openid,
->>>>>>> Stashed changes
+       // 启用
+       if (active) {
+         await transfer({
+           money,
+           remark,
+           _openid,
 
-  //         // 发放成功回调
-  //         success: (result: any) => {
-  //           console.log("Transfer successful:", result);
-  //           wx.hideToast();
-  //           wx.showModal({
-  //             title: "注册成功",
-  //             content: "低碳现金红包已发放",
-  //             showCancel: false,
-  //             success: () => {
-  //               if (complete) complete();
-  //             }
-  //           });
-  //         },
-  //         failed: (error: { message: any; }) => {
-  //           console.log("Transfer failed:", error);
-  //           wx.hideToast();
-  //           wx.showModal({
-  //             title: "出问题了",
-  //             content: error.message,
-  //             showCancel: false,
-  //             success: () => {
-  //               if (complete) complete();
-  //             }
-  //           });
-  //         },
-  //         error: (err: { message: any; }) => {
-  //           console.log("Error during transfer:", err);
-  //           wx.hideToast();
-  //           wx.showModal({
-  //             title: "出问题了",
-  //             content: err.message,
-  //             showCancel: false,
-  //             success: () => {
-  //               if (complete) complete();
-  //             }
-  //           });
-  //         }
-  //       });
+           // 发放成功回调
+          success: (result: any) => {
+            console.log("Transfer successful:", result);
+            wx.hideToast();
+            wx.showModal({
+              title: "注册成功",
+              content: "低碳现金红包已发放", //
+              showCancel: false,
+              success: () => {
+                if (complete) complete();
+              }
+            });
+          },
+          failed: (error: { message: any; }) => {
+            console.log("Transfer failed:", error);
+            wx.hideToast();
+            wx.showModal({
+              title: "出问题了",
+              content: error.message,
+              showCancel: false,
+              success: () => {
+                if (complete) complete();
+              }
+            });
+          },
+          error: (err: { message: any; }) => {
+            console.log("Error during transfer:", err);
+            wx.hideToast();
+            wx.showModal({
+              title: "出问题了",
+              content: err.message,
+              showCancel: false,
+              success: () => {
+                if (complete) complete();
+              }
+            });
+          }
+        });
 
-<<<<<<< Updated upstream
-  //       // 未启用
-  //     } else {
-  //       wx.hideToast();
-  //       wx.showModal({
-  //         title: "抱歉",
-  //         content: "现金奖励未启用",
-  //         showCancel: false,
-  //         success: () => {
-  //           if (complete) complete();
-  //         }
-  //       });
-  //     }
-=======
         // 未启用
       } else {
         wx.hideToast();
@@ -610,16 +525,13 @@ Page({
           }
         });
       }
->>>>>>> Stashed changes
 
-  //     this.transferEntranceMoney.lock = false;
-  //   } else {
-  //     if (complete) complete();
-  //   }
-  // },
-  async transferEntranceMoney(){
-    return;
+      this.transferEntranceMoney.lock = false;
+    } else {
+      if (complete) complete();
+    }
   },
+
   onLoad() {
     // 更新颜色
     updateColor();
