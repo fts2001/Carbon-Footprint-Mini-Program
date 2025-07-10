@@ -42,9 +42,10 @@ async function transfer({
       name: 'transfer',
       data: { money, remark, _openid },
     }) as TransferResult;
-
+    // console.log(result)
     if (result.errMsg === "cloud.callFunction:ok") {
       const { result: functionResult } = result;
+      // console.log(functionResult);
       if (functionResult && !functionResult.error) {
         // 成功发放
         console.log(result.result?.package_info)
