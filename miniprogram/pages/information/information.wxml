@@ -26,12 +26,12 @@
     <view class="articles-container">
       <!-- 收藏文章副标题 -->
       <view class="subtitle-recommend">
-        <text>关注文章</text>
+        <text>教程</text>
       </view>
 
       <!-- 推荐文章 -->
       <view class="horizontal-articles-scroller">
-        <view wx:for="{{articleShowList}}" wx:for-index="i" wx:key="i" class="horizontal-article" bindtap="bindClickArticle" data-id="{{item._id}}">
+        <view wx:for="{{articleShowList}}" wx:for-index="i" wx:key="i" class="horizontal-article" bindtap="bindClickArticle" data-id="{{item._id}}" wx:if="{{item.author === '碳行家'}}">
           <image class="article-image" src="{{item.imgs[0]}}"></image>
           <view class="article-text">
             <view class="title">{{item.title}}</view>
