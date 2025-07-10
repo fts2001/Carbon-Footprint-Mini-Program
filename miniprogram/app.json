@@ -72,7 +72,7 @@
   "style": "v2",
   "permission": {
     "scope.userLocation": {
-      "desc": "不授权不影响参与抽\n这希望是第二行\r\n这希望是第三行"
+      "desc": "不授权不影响参与抽"
     }
   },
   "requiredBackgroundModes": [
