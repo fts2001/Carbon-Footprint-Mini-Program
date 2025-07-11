@@ -1,4 +1,4 @@
-<!--pages/information/information.wxml-->
+
 <block wx:if="{{isFromShareTimeline}}">
   <view class="page-background">
     <image class="QRcode" src="https://696c-iluvcarb-0gzvs45g82b57f98-1315168954.tcb.qcloud.la/logo/WechatIMG371.jpg?sign=1618ba30f1437e607318b76aa7335ad7&t=1720952079"></image>
