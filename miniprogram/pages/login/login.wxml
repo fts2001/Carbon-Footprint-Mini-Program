@@ -140,18 +140,20 @@
   <!-- 提示弹窗 -->
   <van-dialog use-slot title="即将申请权限" show="{{ authorizeDialog }}" overlay="{{false}}" bind:confirm="getAuthorize" class="authorizeDialog">
     <view style="padding: 20rpx; text-align: center;line-height: 60rpx;">
-      <view>依据《中华人民共和国个人信息保护法》《环境保护法》相关规定，为履行碳足迹监测公共服务职责，请您授权：</view>
-      <block wx:if="{{}}">
+
+      <block wx:if="{{loginType === 0}}">
+        <view>依据网信办要求，需获取您的数据以完成碳排放计算及公共碳足迹监测， 请您授权：</view>
         <view>实时位置权限用于行程记录</view>
         <view>微信运动步数权限用于出行方式分析</view>
         <view>消息通知权限用于行程记录消息通知</view>
       </block>
       <block wx:else>
+        <view>为优化对您的服务体验， 精准计算碳排放， 申请您的授权：</view>
         <view>实时位置权限用于实时定位记录绿色出行轨迹</view>
         <view>微信运动步数权限用于同步微信步数计算减排量</view>
         <view>消息通知权限用于开通通知接收积分到账提醒</view>
       </block>
-      <view>不授权不影响参与抽奖</view>
+      <view>拒绝给出权限不会影响后续抽奖</view>
     </view>
   </van-dialog>
 
