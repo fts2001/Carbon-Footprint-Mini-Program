@@ -1,4 +1,4 @@
-<view class="page-background" style="background: {{background}};">
+<view style="background: {{ background }}; display: flex; flex-direction: column; align-items: center; height: 100vh;  font-family: 'Times New Roman', Times, serif;color: #fff;">
   <view class="container">
     <view class="tabbar">
       <block wx:for="{{tabs}}" wx:key="index">

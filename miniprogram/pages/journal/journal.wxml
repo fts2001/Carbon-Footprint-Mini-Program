@@ -1,5 +1,6 @@
 <!--pages/journal/journal.wxml-->
-<view class="page-background" style="background: {{background}} ; font-family:'Times New Roman', Times, serif;" >
+<!-- <view class="page-background" style="background: {{background}}; font-family:'Times New Roman', Times, serif;" > -->
+<view style="background: {{ background }}; display: flex; flex-direction: column; align-items: center; height: 100vh; justify-content: center;  font-family: 'Times New Roman', Times, serif;color: #fff;">
   
   <view wx:if="{{typeq==3}}"   class="page-introduction"  style="font-size: 50rpx; text-align: left;margin-top: 30rpx;margin-left: 40rpx;margin-bottom: 40rpx;">
   <view>恭喜中奖！请完成此问卷兑奖</view>

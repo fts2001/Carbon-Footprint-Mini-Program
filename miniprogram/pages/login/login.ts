@@ -441,96 +441,99 @@ Page({
 
         if (res.result && typeof res.result === "object" && "success" in res.result) {
           if (res.result.success) {
-            this.transferEntranceMoney({
-              complete: () => {
-                wx.reLaunch({
-                  url: "/pages/authentication/authentication"
-                });
-              }
-            });
+            // this.transferEntranceMoney({
+            //   complete: () => {
+            //     wx.reLaunch({
+            //       url: "/pages/authentication/authentication"
+            //     });
+            //   }
+            // });
+            wx.reLaunch({
+              url: "/pages/authentication/authentication"
+            })
           }
         }
       }
     });
   },
 
-   async transferEntranceMoney({ complete }: { complete?: () => void }) {
-     if (!this.transferEntranceMoney.lock) {
-       this.transferEntranceMoney.lock = true;
+  //  async transferEntranceMoney({ complete }: { complete?: () => void }) {
+  //    if (!this.transferEntranceMoney.lock) {
+  //      this.transferEntranceMoney.lock = true;
 
-       // transfer entrance money
-       const db = wx.cloud.database();
-       const transferMoney = (await db.collection("transferMoney").get()).data[0];
+  //      // transfer entrance money
+  //      const db = wx.cloud.database();
+  //      const transferMoney = (await db.collection("transferMoney").get()).data[0];
 
-       const _openid = app.globalData.openID;
-       const active = transferMoney.active;
-       const money = transferMoney.entrance.money;
-       const remark = transferMoney.entrance.info;
+  //      const _openid = app.globalData.openID;
+  //      const active = transferMoney.active;
+  //      const money = transferMoney.entrance.money;
+  //      const remark = transferMoney.entrance.info;
 
-       // 启用
-       if (active) {
-         await transfer({
-           money,
-           remark,
-           _openid,
+  //      // 启用
+  //      if (active) {
+  //        await transfer({
+  //          money,
+  //          remark,
+  //          _openid,
 
-           // 发放成功回调
-          success: (result: any) => {
-            console.log("Transfer successful:", result);
-            wx.hideToast();
-            wx.showModal({
-              title: "注册成功",
-              content: "低碳现金红包已发放", //
-              showCancel: false,
-              success: () => {
-                if (complete) complete();
-              }
-            });
-          },
-          failed: (error: { message: any; }) => {
-            console.log("Transfer failed:", error);
-            wx.hideToast();
-            wx.showModal({
-              title: "出问题了",
-              content: error.message,
-              showCancel: false,
-              success: () => {
-                if (complete) complete();
-              }
-            });
-          },
-          error: (err: { message: any; }) => {
-            console.log("Error during transfer:", err);
-            wx.hideToast();
-            wx.showModal({
-              title: "出问题了",
-              content: err.message,
-              showCancel: false,
-              success: () => {
-                if (complete) complete();
-              }
-            });
-          }
-        });
+  //          // 发放成功回调
+  //         success: (result: any) => {
+  //           console.log("Transfer successful:", result);
+  //           wx.hideToast();
+  //           wx.showModal({
+  //             title: "注册成功",
+  //             content: "低碳现金红包已发放", //
+  //             showCancel: false,
+  //             success: () => {
+  //               if (complete) complete();
+  //             }
+  //           });
+  //         },
+  //         failed: (error: { message: any; }) => {
+  //           console.log("Transfer failed:", error);
+  //           wx.hideToast();
+  //           wx.showModal({
+  //             title: "出问题了",
+  //             content: error.message,
+  //             showCancel: false,
+  //             success: () => {
+  //               if (complete) complete();
+  //             }
+  //           });
+  //         },
+  //         error: (err: { message: any; }) => {
+  //           console.log("Error during transfer:", err);
+  //           wx.hideToast();
+  //           wx.showModal({
+  //             title: "出问题了",
+  //             content: err.message,
+  //             showCancel: false,
+  //             success: () => {
+  //               if (complete) complete();
+  //             }
+  //           });
+  //         }
+  //       });
 
-        // 未启用
-      } else {
-        wx.hideToast();
-        wx.showModal({
-          title: "抱歉",
-          content: "现金奖励未启用",
-          showCancel: false,
-          success: () => {
-            if (complete) complete();
-          }
-        });
-      }
+  //       // 未启用
+  //     } else {
+  //       wx.hideToast();
+  //       wx.showModal({
+  //         title: "抱歉",
+  //         content: "现金奖励未启用",
+  //         showCancel: false,
+  //         success: () => {
+  //           if (complete) complete();
+  //         }
+  //       });
+  //     }
 
-      this.transferEntranceMoney.lock = false;
-    } else {
-      if (complete) complete();
-    }
-  },
+  //     this.transferEntranceMoney.lock = false;
+  //   } else {
+  //     if (complete) complete();
+  //   }
+  // },
 
   onLoad() {
     // 更新颜色
