@@ -41,10 +41,17 @@ Page({
     const winAngles = that.data.items.filter(item => item.name === '中奖').map(item => item.angle);
     const loseAngles = that.data.items.filter(item => item.name !== '中奖').map(item => item.angle);
   
+    // 判断是否中奖（1/16 概率）
     const isWin = Math.random() < 1 / 16;
   
     // 根据中奖状态选取对应角度
     const targetAngle = isWin
+      ? winAngles[Math.floor(Math.random() * winAngles.length)]
+      : loseAngles[Math.floor(Math.random() * loseAngles.length)];
+  
+    // 转动5圈 + 指向目标角度
+    const finalAngle = 360 * 5 + 315 + targetAngle;
+  
     this.setData({ rotate: true, rotateDeg: finalAngle });
   
     setTimeout(() => {
@@ -55,9 +62,7 @@ Page({
           title: '提示',
           message: '恭喜你中奖了! 客服将在20日内为你发放奖品，请关注消息中心。',
         }).then(() => {
-          console.log("奖品", that.data.award);
           const db = wx.cloud.database();
-          });
           db.collection('award').add({ data: that.data.award }).then(() => {
             this.showDialog();
           }).catch(console.error);
