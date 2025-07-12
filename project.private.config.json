@@ -1,6 +1,24 @@
 {
   "libVersion": "3.8.10",
   "setting": {
-    "bigPackageSizeSupport": false
-  }
+    "bigPackageSizeSupport": false,
+    "urlCheck": true,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": false,
+    "skylineRenderEnable": false,
+    "preloadBackgroundData": false,
+    "autoAudits": false,
+    "useApiHook": true,
+    "useApiHostProcess": true,
+    "showShadowRootInWxmlPanel": true,
+    "useStaticServer": true,
+    "useLanDebug": false,
+    "showES6CompileOption": false,
+    "compileHotReLoad": true,
+    "checkInvalidKey": true,
+    "ignoreDevUnusedFiles": true,
+    "useIsolateContext": false
+  },
+  "projectname": "CarbonFootprint",
+  "condition": {}
 }

@@ -62,6 +62,7 @@ Page({
           title: '提示',
           message: '恭喜你中奖了! 客服将在20日内为你发放奖品，请关注消息中心。',
         }).then(() => {
+          that.data.award.isWin = true
           const db = wx.cloud.database();
           db.collection('award').add({ data: that.data.award }).then(() => {
             this.showDialog();
@@ -72,7 +73,11 @@ Page({
           title: '提示',
           message: '很遗憾, 未中奖!',
         }).then(() => {
-          this.showDialog();
+          that.data.award.isWin = false
+          const db = wx.cloud.database();
+          db.collection('award').add({ data: that.data.award }).then(() => {
+            this.showDialog();
+          }).catch(console.error);
         });
       }
     }, 4000); // 动画时间与css保持一致

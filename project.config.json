@@ -56,7 +56,7 @@
   },
   "appid": "wx501c20d4e2802733",
   "projectname": "CarbonFootprint",
-  "libVersion": "3.8.7",
+  "libVersion": "3.8.10",
   "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
   "condition": {},
   "compileType": "miniprogram",
