@@ -263,25 +263,25 @@ Page({
 
           console.log("trackRes---", trackRes);
         try {
-          const {
-            data: { prediction }
-          } = await wx.cloud.callContainer({
-            config: {
-              env: "prod-5g9hyw5ua680d3fc"
-            },
-            path: "/predict",
-            header: {
-              "X-WX-SERVICE": "trip",
-              "X-WX-EXCLUDE-CREDENTIALS": "unionid, cloudbase-access-token, openid"
-            },
-            method: "POST",
-            data: { speeds }
-          });
+          // const {
+          //   data: { prediction }
+          // } = await wx.cloud.callContainer({
+          //   config: {
+          //     env: "prod-5g9hyw5ua680d3fc"
+          //   },
+          //   path: "/predict",
+          //   header: {
+          //     "X-WX-SERVICE": "trip",
+          //     "X-WX-EXCLUDE-CREDENTIALS": "unionid, cloudbase-access-token, openid"
+          //   },
+          //   method: "POST",
+          //   data: { speeds }
+          // });
 
-          await wx.cloud.callFunction({
-            name: "updateTrackTransport",
-            data: { curID: _this.data.curID, prediction }
-          });
+          // await wx.cloud.callFunction({
+          //   name: "updateTrackTransport",
+          //   data: { curID: _this.data.curID, prediction }
+          // });
         } catch (e) {
           console.error("Caught error:", e);
         } finally {

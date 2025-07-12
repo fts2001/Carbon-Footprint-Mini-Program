@@ -46,7 +46,9 @@
       <view>我的现金 </view>
 
       <view class="myAward" bind:tap="showMyAward">查看我的奖品</view>
+      
     </view>
+
   </view>
 
 </scroll-view>

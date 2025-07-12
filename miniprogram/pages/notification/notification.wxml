@@ -36,10 +36,10 @@
       <view class="refresh-message">下拉刷新信息</view> <!-- New Line -->
     </view>
     <view wx:if="{{currentTab == 1}}" class="send-message-container">
-      <picker mode="selector" range="{{types}}" bindchange="bindPickerChange">
+      <picker style="color: black;" mode="selector" range="{{types}}" bindchange="bindPickerChange">
         <view class="picker">{{type || "点击选择发件类型"}}</view>
       </picker>
-      <textarea bindinput="bindMessageInput" placeholder="请在此输入..." value="{{message}}"></textarea>
+      <textarea style="color: black;" bindinput="bindMessageInput" placeholder="请在此输入..." value="{{message}}"></textarea>
       <button bindtap="submitMessage">发送</button>
     </view>
   </view>

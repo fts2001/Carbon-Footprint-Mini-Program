@@ -413,7 +413,7 @@ Page({
           if (res.result && res.result.success) {
             wx.showModal({
               title: "恭喜！",
-              content: "低碳现金红包已发放",
+              content: "恭喜您获得0.3元注册红包",
               showCancel: false
             });
           } else {

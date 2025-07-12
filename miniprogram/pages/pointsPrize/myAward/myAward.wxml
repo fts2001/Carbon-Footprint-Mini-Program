@@ -3,7 +3,9 @@
   <view style="content: '';overflow: hidden;"></view>
   <view style="padding: 30rpx 0;text-align: center;display: inline-block;width: 40vw;height: 50rpx;margin-left: 30vw;font-size: 40rpx;color: #FFF;background: #f9bc60;border-radius: 30rpx;box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;margin-top: 30rpx;">我的奖品</view>
   
+
   <scroll-view scroll-y style="height: calc(100vh - 170rpx); padding: 30rpx 60rpx;width: calc(100vw - 120rpx);">
+    <view style="color: white; text-align: center;">奖品将在20个工作日内发放， 请您留意消息中心 - 收件箱</view>
     <block wx:for="{{award}}" wx:key="index">
       <view style="font-size: 50rpx;color: #FFF;display: flex;justify-content: space-between;align-items: center;">
         <view>{{item.name}}</view>
