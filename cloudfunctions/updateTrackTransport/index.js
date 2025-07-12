@@ -29,9 +29,9 @@ const labels = [
 ];
 
 exports.main = async event => {
-  const calcTransport = labels.find(item => item.value === event.prediction)?.label || "未知速度";
+  // const calcTransport = labels.find(item => item.value === event.prediction)?.label || "未知速度";
 
-  await db.collection("track").doc(event.curID).update({ data: { calcTransport } });
+  // await db.collection("track").doc(event.curID).update({ data: { calcTransport } });
 
   return true;
 };

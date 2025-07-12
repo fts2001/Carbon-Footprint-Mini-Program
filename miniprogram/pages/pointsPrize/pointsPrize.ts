@@ -8,10 +8,10 @@ Page({
     nowTab: "0", //当前的tab页
     items: [
       { id: 1, name: '不中', angle: 0, bacckground: "#fdf5e1", color: "#419f8c" },
-      { id: 2, name: '中奖', angle: 45, bacckground: "#97baaf", color: "#FFF" },
+      { id: 2, name: '不中', angle: 45, bacckground: "#97baaf", color: "#FFF" },
       { id: 3, name: '不中', angle: 90, bacckground: "#fdf5e1", color: "#419f8c" },
       { id: 4, name: '不中', angle: 135, bacckground: "#97baaf", color: "#FFF" },
-      { id: 5, name: '不中', angle: 180, bacckground: "#fdf5e1", color: "#419f8c" },
+      { id: 5, name: '中奖', angle: 180, bacckground: "#fdf5e1", color: "#419f8c" },
       { id: 6, name: '不中', angle: 225, bacckground: "#97baaf", color: "#FFF" },
       { id: 7, name: '不中', angle: 270, bacckground: "#fdf5e1", color: "#419f8c" },
       { id: 8, name: '不中', angle: 315, bacckground: "#97baaf", color: "#FFF" }
@@ -31,44 +31,47 @@ Page({
       }
     ]
   },
-  // 选择奖品
+
+  // 修改后的选择奖品逻辑（ui为1/8，实际为1/16）
   chooseAward(e) {
-    var that = this
-    this.setData({ award: e.currentTarget.dataset.item, showAward: false, rotate: true })
+    const that = this;
+    this.setData({ award: e.currentTarget.dataset.item, showAward: false });
+  
+    // 获取中奖与未中奖角度
+    const winAngles = that.data.items.filter(item => item.name === '中奖').map(item => item.angle);
+    const loseAngles = that.data.items.filter(item => item.name !== '中奖').map(item => item.angle);
+  
+    const isWin = Math.random() < 1 / 16;
+  
+    // 根据中奖状态选取对应角度
+    const targetAngle = isWin
+    this.setData({ rotate: true, rotateDeg: finalAngle });
+  
     setTimeout(() => {
-      var items = this.shuffleArray(this.data.items)
-      console.log(items);
-
-      this.setData({ rotate: false, items: items, date: Date.now() })
-
-      if (items[1].name == '中奖') {
+      this.setData({ rotate: false });
+  
+      if (isWin) {
         Dialog.alert({
           title: '提示',
-          message: '恭喜你中奖了!',
+          message: '恭喜你中奖了! 客服将在20日内为你发放奖品，请关注消息中心。',
         }).then(() => {
           console.log("奖品", that.data.award);
-          
-          const app = getApp();
           const db = wx.cloud.database();
-          const collection = db.collection('award');
-          collection.add({data: that.data.award}).then((res) => {
-            this.showDialog()
-          })
-          .catch((err) => {
-            console.error(err);
           });
-
+          db.collection('award').add({ data: that.data.award }).then(() => {
+            this.showDialog();
+          }).catch(console.error);
         });
       } else {
         Dialog.alert({
           title: '提示',
           message: '很遗憾, 未中奖!',
         }).then(() => {
-          this.showDialog()
+          this.showDialog();
         });
       }
-    }, 2000);
-  },
+    }, 4000); // 动画时间与css保持一致
+  },  
   // 展示实验说明
   showDialog() {
     setTimeout(() => {
@@ -79,7 +82,6 @@ Page({
         // on close
       });
     }, 1000);
-
   },
   // 显示我的奖品
   showMyAward() {
@@ -91,67 +93,22 @@ Page({
   shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]]; // 交换元素
+      [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
   },
   // 选择tab
   chooseTab(e) {
-    this.setData({ nowTab: e.currentTarget.dataset.name })
-  },
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad() {
-
+    this.setData({ nowTab: e.currentTarget.dataset.name });
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
-  }
-})
+  // 页面生命周期
+  onLoad() {},
+  onReady() {},
+  onShow() {},
+  onHide() {},
+  onUnload() {},
+  onPullDownRefresh() {},
+  onReachBottom() {},
+  onShareAppMessage() {}
+});
