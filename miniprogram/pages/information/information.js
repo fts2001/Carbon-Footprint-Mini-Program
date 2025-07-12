@@ -835,45 +835,71 @@ Page({
       this.setData({ isLoading: false });
     };
 
+    // 获取地理位置内置函数
+    const getLocationWithTimeout = async (timeout = 5000) => {
+      return await new Promise((resolve, reject) => {
+        let isDone = false;
+    
+        const timer = setTimeout(() => {
+          if (!isDone) {
+            isDone = true;
+            reject(new Error("getLocation timeout"));
+          }
+        }, timeout);
+    
+        wx.getLocation({
+          type: "gcj02",
+          success: res => {
+            if (!isDone) {
+              isDone = true;
+              clearTimeout(timer);
+              resolve(res);
+            }
+          },
+          fail: err => {
+            if (!isDone) {
+              isDone = true;
+              clearTimeout(timer);
+              reject(err);
+            }
+          }
+        });
+      });
+    };
+
     // 获取地理位置
     const setting = await wx.getSetting();
     const hasLocationPermission = setting.authSetting["scope.userLocationBackground"];
     if (hasLocationPermission) {
-      wx.getLocation({
-        type: "gcj02",
-        timeout: 5000,
-        success: async loc => {
-          const latitude = loc.latitude.toFixed(2);
-          const longitude = loc.longitude.toFixed(2);
-
-          const { result: sendParams } = await wx.cloud.callFunction({
-            name: "setweather",
-            data: { longitude, latitude }
-          }) || {};
-
-          const rawProvince = sendParams.provinceName || "";
-          const cleanedProvince = rawProvince.replace(/(省|市|区|县|自治区|特别行政区)$/, "");
-          this.setData({ geolocation: cleanedProvince });
-          console.log(`获取定位成功：${cleanedProvince}`);
-
-          await finishArticleInit();
-          clearTimeout(timeoutId);
-          wx.hideLoading();
-        },
-        fail: async err => {
-          console.warn("获取定位失败：", err);
-          
-          await finishArticleInit();
-          clearTimeout(timeoutId);
-          wx.hideLoading();
-        }
-      });
-
+      try {
+        const loc = await getLocationWithTimeout(10000);
+        const latitude = loc.latitude.toFixed(2);
+        const longitude = loc.longitude.toFixed(2);
+      
+        const { result: sendParams } = await wx.cloud.callFunction({
+          name: "setweather",
+          data: { longitude, latitude }
+        }) || {};
+      
+        const rawProvince = sendParams.provinceName || "";
+        const cleanedProvince = rawProvince.replace(/(省|市|区|县|自治区|特别行政区)$/, "");
+        this.setData({ geolocation: cleanedProvince });
+        console.log(`获取定位成功：${cleanedProvince}`);
+      } catch (err) {
+        console.warn("定位失败或超时：", err);
+      } finally {
+        await finishArticleInit();
+        clearTimeout(timeoutId);
+        wx.hideLoading();
+      }
+    
       return;
     }
 
     // 无定位权限，直接初始化文章
     await finishArticleInit();
+    clearTimeout(timeoutId);
+    wx.hideLoading();
   },
 
 
