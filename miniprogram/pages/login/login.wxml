@@ -132,7 +132,6 @@
 
 <!-- 新的注册页面 -->
 <view style="height: 100vh;">
-
   <!-- 授权页面的背景图片 -->
   <image src="cloud://iluvcarb-0gzvs45g82b57f98.696c-iluvcarb-0gzvs45g82b57f98-1315168954/loginBackground/background1.png" style="position: fixed;left: 0;top: 0;width: 100vw;height: 100vh; z-index: 2;" wx:if="{{loginType === 0}}" bindload="showAuthorizeDialog" />
   <image src="cloud://iluvcarb-0gzvs45g82b57f98.696c-iluvcarb-0gzvs45g82b57f98-1315168954/loginBackground/background2.png" style="position: fixed;left: 0;top: 0;width: 100vw;height: 100vh; z-index: 2;" wx:if="{{loginType === 1}}" bindload="showAuthorizeDialog" />
@@ -205,6 +204,45 @@
     </modal>
   </view>
 
+  <!-- 注册弹窗1 -->
+  <van-dialog
+    style="position: relative;"
+    custom-style="background-color: transparent;"
+    use-slot width="100vw" show="{{ newUserModalShow }}" show-confirm-button="{{false}}">
+        <view style="height: 100rpx;">
+          <image class="close-icon" src="../../asset/img/close.svg" bind:tap="closeNewUserModal" />
+        </view>
+        <view class="van-dialog-body">
+            <image class="new-user-image" mode="widthFix" src="../../asset/img/new-user-modal.png" />
+        </view>
+    </van-dialog>
+
+  <!-- 注册弹窗2 -->
+  <van-dialog
+    style="position: relative;"
+    custom-style="background-color: transparent;"
+    use-slot width="100vw" show="{{ newUserModalShow2 }}" show-confirm-button="{{false}}">
+        <view class="van-dialog-body" style="display: flex; flex-direction: column; position: relative">
+            <image class="new-user-image" mode="widthFix" src="../../asset/img/new-user-modal2.png" bind:tap="accept"/>
+            <View style="font-weight: 600; font-size: 60rpx; color:#FF0000; position: absolute; left: 50%; top: 390rpx; transform: translateX(-50%);">0.03元</View>
+            <view style="margin-top: 16rpx; padding: 20rpx 32rpx; background-color: #FCDB8E;font-size: 40rpx; color:#FF0000;width: 80vw; border-radius: 52rpx;">本次实验时间为期3天，每日登陆活跃领积分即可参与现金大转盘，领88元现金红包！</view>
+        </view>
+    </van-dialog>
+
+      <!-- 完成注册积分提示弹窗 -->
+  <van-dialog use-slot title="恭喜你完成了注册" show="{{ scoreTipsDialog }}" bind:confirm="getLoginType" class="authorizeDialog">
+    <view style="padding: 20rpx; text-align: center;line-height: 60rpx;">
+        <view>1.奖励触发方式:</view>
+        <view>具体每次奖励积分值请以活动页面实际显示为准。</view>
+        <view>2.积分兑换规则: </view>
+        <view>您所获得的积分可以累积。</view>
+        <view>最低积分兑换比例: 50积分=0.5元。</view>
+        <view>积分可用于兑换红包或其他奖励，具体兑换方式请留意平台内的“积分好礼”界面。</view>
+        <view>3.活动参与资格: </view>
+        <view>通常需要完成注册/登录后方可参与本活动并累积积分。</view>
+    </view>
+  </van-dialog>
+
   <!-- 入口选择题 -->
   <view>
     <view style="color: #FFF;background:#419f8c; font-size: 40rpx;text-align: center;line-height: 90rpx;height: 90rpx;">
@@ -259,7 +297,7 @@
       </view>
 
       <view>
-        <text class="finish" bind:tap="getLoginType">完成注册</text>
+        <text class="finish" bind:tap="showScoreTips">完成注册</text>
       </view>
 
     </scroll-view>

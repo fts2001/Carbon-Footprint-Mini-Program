@@ -7,16 +7,15 @@ const db = cloud.database();
 const _ = db.command;
 
 exports.main = async event => {
-
-  var carbSum = 0
-  var speeds = 0
+  var carbSum = 0;
+  var speeds = 0;
 
   const trackRes = await db
     .collection("track")
     .doc(event.curID)
     .update({
       data: {
-        isManual: true,//手动输入数据的标志
+        isManual: true, //手动输入数据的标志
         endTime: new Date(),
         endSteps: event.stepList ? event.stepList[30].step : null,
         weather: {}, // 温度
@@ -30,5 +29,4 @@ exports.main = async event => {
     });
 
   return { carbSum, trackRes, speeds };
-
 };

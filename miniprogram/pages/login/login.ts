@@ -3,8 +3,7 @@ const { onHandleSignIn } = require("../../utils/login");
 const { logEvent } = require("../../utils/log");
 const { transfer } = require("../../utils/transfer");
 //import Dialog from "@vant/weapp/dialog/dialog";
-import Dialog from "../../miniprogram_npm/@vant/weapp/dialog/dialog"
-
+import Dialog from "../../miniprogram_npm/@vant/weapp/dialog/dialog";
 
 const app = getApp();
 const unknownAvatarUrl = "https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0";
@@ -15,8 +14,9 @@ Page({
    * 页面的初始数据
    */
   data: {
-    modalHidden: false,
-
+    modalHidden: true,
+    newUserModalShow: true,
+    newUserModalShow2: false,
     userInfo: null,
     avatarUrl: unknownAvatarUrl,
 
@@ -47,10 +47,11 @@ Page({
     // userSex: ''
 
     // 登录改变后使用的属性
-    sexArr: [ //性别列表
-      { name: '0', value: '男' },
-      { name: '1', value: '女' },
-      { name: '2', value: '保密' }
+    sexArr: [
+      //性别列表
+      { name: "0", value: "男" },
+      { name: "1", value: "女" },
+      { name: "2", value: "保密" }
     ],
     sex: "",
     ageArr: ["18-29", "30-49", "50-65", "65岁及以上"],
@@ -61,42 +62,48 @@ Page({
     occupation: "",
     incomeArr: ["不愿透露", "3,000元及以下", "3,001~5,000元", "5,001~12,000元", "12,001~30,000元", "30,001元及以上"],
     income: "",
-    loginType: "", //登录类型,0/1分别代表的是华表版本和环境版本 
+    loginType: "", //登录类型,0/1分别代表的是华表版本和环境版本
     authorizeDialog: false, //提示权限的弹窗
     showPopup: false, //展示模拟授权消息订阅的弹窗
     messageAuthorize: false, //消息订阅权限
+    scoreTipsDialog: false //积分说明弹窗
   },
 
   // 改变属性
   newChange(e) {
     console.log(e);
-    let name = e.currentTarget.dataset.name
-    let value = e.detail.value
-    let data = this.data
-    data[name] = value
-    this.setData(data)
+    let name = e.currentTarget.dataset.name;
+    let value = e.detail.value;
+    let data = this.data;
+    data[name] = value;
+    this.setData(data);
+  },
+  showScoreTips() {
+    this.setData({ scoreTipsDialog: true });
   },
   // 1. 先随机一下登录类型
-  getLoginType(){
-    this.setData({loginType: Math.random() < 0.5 ? 0 : 1})
+  getLoginType() {
+    this.setData({ loginType: Math.random() < 0.5 ? 0 : 1 });
   },
   // 2. 再显示授权提示弹窗
-  showAuthorizeDialog(){
-    this.setData({authorizeDialog: true})
+  showAuthorizeDialog() {
+    this.setData({ authorizeDialog: true });
   },
   // 3. 然后申请授权
   getAuthorize() {
     // 权限列表
-    var scopes = [{ scope: "scope.userLocation", content: "实时位置权限: 用于行程轨迹记录" },
-    { scope: "scope.werun", content: "微信运动步数: 用于出行方式分析" }]
-    var promises: any = []
+    var scopes = [
+      { scope: "scope.userLocation", content: "实时位置权限: 用于行程轨迹记录" },
+      { scope: "scope.werun", content: "微信运动步数: 用于出行方式分析" }
+    ];
+    var promises: any = [];
     scopes.forEach(scope => {
-      promises.push(this.authorize(scope))
+      promises.push(this.authorize(scope));
     });
     Promise.all(promises).then(res => {
       // 前两个授权加载完成之后，还要模拟是否授权取消订阅
-      this.simulateAuthorize()
-    })
+      this.simulateAuthorize();
+    });
   },
   // 3_1. 申请授权的子接口
   authorize(data) {
@@ -107,38 +114,37 @@ Page({
             wx.authorize({
               scope: data.scope,
               success: () => {
-                resolve({ data: data, success: true })
+                resolve({ data: data, success: true });
               },
-              fail: (err) => {
-                resolve({ data: data, success: false })
+              fail: err => {
+                resolve({ data: data, success: false });
               }
             });
           } else {
-            resolve({ data: data, success: true })
+            resolve({ data: data, success: true });
           }
         }
-      })
-    })
+      });
+    });
   },
   // 4. 需要模拟授权消息订阅
-  simulateAuthorize(){
-    this.setData({showPopup: true})
+  simulateAuthorize() {
+    this.setData({ showPopup: true });
   },
   // 4_1. 模拟授权的配套方法, 关闭弹窗
-  onClosePopup(){
-    this.setData({showPopup: false})
-    this.finishLogin()
+  onClosePopup() {
+    this.setData({ showPopup: false });
+    this.finishLogin();
   },
   // 4_2. 模拟授权的配套方案, 确认授权
-  submitSimulateAuthorize(){
-    this.setData({showPopup: false, messageAuthorize: true})
-    this.finishLogin()
+  submitSimulateAuthorize() {
+    this.setData({ showPopup: false, messageAuthorize: true });
+    this.finishLogin();
   },
 
   // 5. 改变后的登录接口
   async finishLogin() {
-
-    this.setData({ nickname: "微信用户" })
+    this.setData({ nickname: "微信用户" });
     if (!this.validateForm() || app.globalData.userInfo) {
       return;
     }
@@ -165,9 +171,9 @@ Page({
       }
     };
     await wx.getSetting().then(res => {
-      basicInfo.authorize.userLocation = res.authSetting['scope.userLocation'] || false
-      basicInfo.authorize.werun = res.authSetting['scope.werun'] || false
-    })
+      basicInfo.authorize.userLocation = res.authSetting["scope.userLocation"] || false;
+      basicInfo.authorize.werun = res.authSetting["scope.werun"] || false;
+    });
     console.log("basicInfo---", basicInfo);
 
     const carbSum = 0;
@@ -207,10 +213,15 @@ Page({
     });
   },
 
-  async modalConfirm(e) {
+  closeNewUserModal() {
     this.setData({
-      modalHidden: true
+      newUserModalShow: false,
+      modalHidden: false
     });
+  },
+
+  async modalConfirm(e) {
+    this.setData({ modalHidden: true });
 
     const settingRes = await wx.getSetting();
     if (!settingRes.authSetting["scope.userLocationBackground"]) {
@@ -232,6 +243,8 @@ Page({
         });
       }
     });
+
+    this.setData({ newUserModalShow2: true });
   },
 
   modalCancel() {
@@ -411,7 +424,7 @@ Page({
     }
   },
 
-  uploadData: function (avatar: any, basicInfo: any, carbSum: any, testGroup: any,) {
+  uploadData: function (avatar: any, basicInfo: any, carbSum: any, testGroup: any) {
     wx.showToast({
       title: "正在登录",
       icon: "loading",
@@ -450,7 +463,7 @@ Page({
             // });
             wx.reLaunch({
               url: "/pages/authentication/authentication"
-            })
+            });
           }
         }
       }
@@ -554,5 +567,8 @@ Page({
         console.log("share failed");
       }
     };
+  },
+  accept() {
+    this.setData({ newUserModalShow2: false });
   }
 });

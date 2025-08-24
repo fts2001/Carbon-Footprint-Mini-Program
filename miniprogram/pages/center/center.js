@@ -1,21 +1,11 @@
 // pages/center/center.ts
-import {
-  logEvent
-} from '../../utils/log';
-import {
-  updateUserData,
-  onCheckSignIn
-} from '../../utils/login'
-import {
-  updateColor
-} from '../../utils/colorschema'
-import {
-  initChart
-} from '../../utils/chart'
-import Dialog from "../../miniprogram_npm/@vant/weapp/dialog/dialog"
+import Dialog from "../../miniprogram_npm/@vant/weapp/dialog/dialog";
+import { initChart } from "../../utils/chart";
+import { updateColor } from "../../utils/colorschema";
+import { logEvent } from "../../utils/log";
+import { onCheckSignIn, updateUserData } from "../../utils/login";
 const app = getApp();
 Page({
-
   /**
    * 页面的初始数据
    */
@@ -30,51 +20,55 @@ Page({
       onInit: initChart
     },
     userInfo: null,
-    openID: '',
-    functionList: [{
-        functionSrc: '../../asset/img/order_unread.png',
-        functionTitle: '低碳问答',
-        url: '../journal/journal?typeq=2'
+    openID: "",
+    functionList: [
+      {
+        functionSrc: "../../asset/img/order_unread.png",
+        functionTitle: "低碳问答",
+        url: "../journal/journal?typeq=2"
       },
       {
-        functionSrc: '../../asset/img/message_unread.png',
-        functionTitle: '消息中心',
-        url: '../notification/notification'
+        functionSrc: "../../asset/img/message_unread.png",
+        functionTitle: "消息中心",
+        url: "../notification/notification"
       },
       {
-        functionSrc: '../../asset/img/credits.png',
-        functionTitle: '积分好礼',
-        url: '../prizeCenter/prizeCenter'
+        functionSrc: "../../asset/img/credits.png",
+        functionTitle: "积分好礼",
+        url: "../prizeCenter/prizeCenter"
       }
     ],
-    CoinRatio: 0,
-
+    CoinRatio: 0
   },
   //用户注销
   delUser() {
     Dialog.confirm({
-        title: '提示',
-        message: '是否确认注销?',
-      })
+      title: "提示",
+      message: "是否确认注销?"
+    })
       .then(() => {
         const db = wx.cloud.database();
 
-        db.collection('userInfo').where({
-          _openid: app.globalData.openID
-        }).update({
-          data: {
-            delFlag: true,
-          }
-        }).then(res => {
-          console.log('更新成功:', res);
-          app.globalData.userInfo = {}
-          wx.clearStorageSync()
-          wx.reLaunch({
-            url: '/pages/index/index',
+        db.collection("userInfo")
+          .where({
+            _openid: app.globalData.openID
           })
-        }).catch(err => {
-          console.error('更新失败:', err);
-        });
+          .update({
+            data: {
+              delFlag: true
+            }
+          })
+          .then(res => {
+            console.log("更新成功:", res);
+            app.globalData.userInfo = {};
+            wx.clearStorageSync();
+            wx.reLaunch({
+              url: "/pages/index/index"
+            });
+          })
+          .catch(err => {
+            console.error("更新失败:", err);
+          });
       })
       .catch(() => {
         // on cancel
@@ -98,12 +92,12 @@ Page({
   //   })
   // },
   updateCredit() {
-    const info = getApp().globalData.userInfo
-    console.log('info of user', info)
-    console.log('user Carb sum', info.carbSum)
+    const info = getApp().globalData.userInfo;
+    console.log("info of user", info);
+    console.log("user Carb sum", info.carbSum);
     this.setData({
       carbSavings: info.carbSum.toFixed(3) // 保留三位小数
-    })
+    });
   },
 
   editProfile() {
@@ -123,24 +117,24 @@ Page({
       },
       failed: () => {
         wx.reLaunch({
-          url: '/pages/index/index',
-        })
+          url: "/pages/index/index"
+        });
       }
-    })
+    });
   },
 
   toggleAutoLogin() {
-    let localAutoLogin = wx.getStorageSync('autoLogin');
+    let localAutoLogin = wx.getStorageSync("autoLogin");
     if (localAutoLogin !== "") {
-      wx.setStorageSync('autoLogin', !localAutoLogin)
+      wx.setStorageSync("autoLogin", !localAutoLogin);
       this.setData({
-        isAutoLogin: !localAutoLogin,
-      })
+        isAutoLogin: !localAutoLogin
+      });
     } else {
-      wx.setStorageSync('autoLogin', true)
+      wx.setStorageSync("autoLogin", true);
       this.setData({
-        isAutoLogin: true,
-      })
+        isAutoLogin: true
+      });
     }
   },
 
@@ -176,20 +170,18 @@ Page({
 
   onTapFunction(e) {
     onCheckSignIn({
-      message: '使用此功能需登录',
+      message: "使用此功能需登录",
       success: () => {
-        console.log(e)
-        console.log(e.currentTarget.dataset)
-        let url = e.currentTarget.dataset.url
-        let title = e.currentTarget.dataset.title
-        if (url != null & title != null) {
-          logEvent(title)
-          wx.navigateTo({
-            url: url,
-          })
+        console.log(e);
+        console.log(e.currentTarget.dataset);
+        let url = e.currentTarget.dataset.url;
+        let title = e.currentTarget.dataset.title;
+        if ((url != null) & (title != null)) {
+          logEvent(title);
+          wx.navigateTo({ url });
         }
       }
-    })
+    });
   },
 
   /**
@@ -200,18 +192,17 @@ Page({
   },
 
   onSurvey(e) {
-    logEvent('About Us')
+    logEvent("About Us");
     wx.navigateTo({
-      url: '/pages/aboutus/aboutus',
-    })
+      url: "/pages/aboutus/aboutus"
+    });
   },
 
   onPrivacy(e) {
-    logEvent('Privacy Statement')
+    logEvent("Privacy Statement");
     wx.navigateTo({
-      url: '/pages/privacy/privacy',
-    })
-
+      url: "/pages/privacy/privacy"
+    });
   },
 
   /**
@@ -222,11 +213,11 @@ Page({
       this.updateCredit();
       // this.initChart();
 
-      let localAutoLogin = wx.getStorageSync('autoLogin');
+      let localAutoLogin = wx.getStorageSync("autoLogin");
       if (localAutoLogin !== "") {
         this.setData({
-          isAutoLogin: localAutoLogin,
-        })
+          isAutoLogin: localAutoLogin
+        });
       }
 
       this.initData.executed = true;
@@ -239,21 +230,18 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onReady() {
-
-  },
+  onReady() {},
   onLoad(options) {
-
     // 页面交互设置
     wx.showShareMenu({
       withShareTicket: true,
       menus: ["shareAppMessage", "shareTimeline"]
-    })
+    });
 
     wx.pageScrollTo({
       scrollTop: 0,
-      duration: 0,
-    })
+      duration: 0
+    });
 
     // 转发朋友圈链接，导航到登录页面
     if (options.isFromShareTimeline) {
@@ -264,25 +252,23 @@ Page({
             isFromShareTimeline: false
           });
         }
-      })
+      });
     } else {
       this.setData({
         isFromShareTimeline: false
       });
-
     }
   },
-
 
   /**
    * 生命周期函数--监听页面显示
    */
   onShow() {
-    this.getTabBar()
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+    this.getTabBar();
+    if (typeof this.getTabBar === "function" && this.getTabBar()) {
       this.getTabBar().setData({
         selected: 3
-      })
+      });
     }
     // 朋友圈进来则不显示
     if (this.data.isFromShareTimeline) {
@@ -296,55 +282,56 @@ Page({
     updateUserData();
 
     onCheckSignIn({
-      message: '请您登录',
+      message: "请您登录",
       success: () => {
         this.initData();
       }
     });
 
     // 更新页面
-    this.randerComponent = this.selectComponent('#mychart-dom-area');
+    this.randerComponent = this.selectComponent("#mychart-dom-area");
     wx.setNavigationBarTitle({
-      title: '碳行家｜个人主页'
-    })
+      title: "碳行家｜个人主页"
+    });
 
-    logEvent('Center Page')
+    logEvent("Center Page");
   },
 
   /**
    * 朋友圈分享
    */
   onShareTimeline() {
-    logEvent('Share App')
+    logEvent("Share App");
     return {
-      title: '省碳领现金，快来试试吧～',
-      imageUrl: "https://696c-iluvcarb-0gzvs45g82b57f98-1315168954.tcb.qcloud.la/logo/WechatIMG778.jpg?sign=c7c5732217972f1c9393850e9e040d70&t=1713096313",
+      title: "省碳领现金，快来试试吧～",
+      imageUrl:
+        "https://696c-iluvcarb-0gzvs45g82b57f98-1315168954.tcb.qcloud.la/logo/WechatIMG778.jpg?sign=c7c5732217972f1c9393850e9e040d70&t=1713096313",
       query: `sharedFromID=${app.globalData.openID}&isFromShareTimeline=true`,
       success: function (res) {
-        console.log(res)
+        console.log(res);
       },
       fail: function (res) {
-        console.log(res)
+        console.log(res);
       }
-    }
+    };
   },
 
   /**
    * 用户点击右上角分享
    */
   onShareAppMessage() {
-    logEvent('Share App')
+    logEvent("Share App");
     return {
       title: "省碳得现金，就用碳行家~",
       path: `/pages/index/index?sharedFromID=${app.globalData.openID}`,
-      imageUrl: "https://696c-iluvcarb-0gzvs45g82b57f98-1315168954.tcb.qcloud.la/logo/WechatIMG778.jpg?sign=c7c5732217972f1c9393850e9e040d70&t=1713096313",
+      imageUrl:
+        "https://696c-iluvcarb-0gzvs45g82b57f98-1315168954.tcb.qcloud.la/logo/WechatIMG778.jpg?sign=c7c5732217972f1c9393850e9e040d70&t=1713096313",
       success: function (res) {
-        console.log(res.shareTickets[0])
+        console.log(res.shareTickets[0]);
       },
       fail: function (res) {
-        console.log('share failed')
+        console.log("share failed");
       }
-    }
+    };
   }
-
-})
+});

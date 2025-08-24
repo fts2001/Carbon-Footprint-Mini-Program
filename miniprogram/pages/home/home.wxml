@@ -118,7 +118,6 @@
   </view>
 
   <van-dialog use-slot width="680rpx" show="{{ show }}" show-confirm-button="{{false}}" bind:close="onTransportModalClose">
-
     <view class="vant-dialog">
       <view class="header">
         <image class="close-icon" src="../../asset/img/close.svg" bindtap="onTransportModalClose" />
@@ -220,6 +219,42 @@
       </view>
     </view>
   </view>
+</van-dialog>
+
+<!-- 奖励弹窗 -->
+<van-dialog
+style="position: relative;"
+custom-style="background-color: transparent;"
+use-slot width="100vw" show="{{ prizeModalShow }}" show-confirm-button="{{false}}">
+     <view class="van-dialog-body" style="display: flex; flex-direction: column; position: relative" bind:tap="confirmPrize">
+            <image class="new-user-image" mode="widthFix" src="../../asset/img/new-user-modal2.png" bind:tap="accept"/>
+            <View style="font-weight: 600; font-size: 60rpx; color:#FF0000; position: absolute; left: 50%; top: 390rpx; transform: translateX(-50%);">0.5元</View>
+        </view>
+</van-dialog>
+
+<!-- 奖励弹窗2 活动弹窗 -->
+<van-dialog
+style="position: relative;"
+custom-style="background-color: transparent;"
+use-slot width="100vw" show="{{ activityModalShow }}" show-confirm-button="{{false}}">
+    <view style="height: 100rpx;">
+      <image class="close-icon" src="../../asset/img/close.svg" bind:tap="closeActivityModal" />
+    </view>
+    <view class="van-dialog-body" style="display:flex; flex-direction:column; position:relative;">
+        <image class="new-user-image" mode="widthFix" src="../../asset/img/pic4.png" bind:tap="closeActivityModal" />
+        <view style="position: absolute; bottom: 70rpx; left: 50%; transform: translateX(-50%);font-size:48rpx;color:#CD0000;">{{showTimer}}</view>
+    </view>
+</van-dialog>
+
+<!-- 积分弹窗 -->
+<van-dialog
+style="position: relative;"
+custom-style="background-color: #E0EAE6; border-radius: 10rpx;"
+use-slot width="70vw" show="{{ scoreModalShow }}" show-confirm-button="{{false}}">
+      <image class="score-close-icon" src="../../asset/img/close.svg" bind:tap="closeScoreModal" />
+    <view style="width:100%; height:160rpx; display: flex; align-items:center; justify-content: center; text-align:center; font-size: 40rpx;">
+        已获得10积分
+    </view>
 </van-dialog>
 
 <van-dialog id="van-dialog" />

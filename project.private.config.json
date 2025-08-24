@@ -1,5 +1,5 @@
 {
-  "libVersion": "3.8.10",
+  "libVersion": "3.5.8",
   "setting": {
     "bigPackageSizeSupport": false,
     "urlCheck": true,
@@ -14,7 +14,7 @@
     "useStaticServer": true,
     "useLanDebug": false,
     "showES6CompileOption": false,
-    "compileHotReLoad": true,
+    "compileHotReLoad": false,
     "checkInvalidKey": true,
     "ignoreDevUnusedFiles": true,
     "useIsolateContext": false

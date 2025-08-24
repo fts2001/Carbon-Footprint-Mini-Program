@@ -9,7 +9,7 @@
   </view>
 
   <!-- 选择奖品 -->
-  <van-dialog use-slot title="请选择奖品" show="{{ showAward }}" showConfirmButton="{{false}}">
+  <van-dialog use-slot title="请选择奖品" show="{{ showAward && type == '1' }}" showConfirmButton="{{false}}">
     <view class="awardView">
       <view class="awardItem" wx:for="{{awardList}}" wx:key="index" bind:tap="chooseAward" data-item="{{item}}">
         <image src="{{item.imgUrl}}" mode="widthFix" style="width: 100%;" />
@@ -18,8 +18,8 @@
     </view>
   </van-dialog>
 
-  <!-- 抽奖轮盘 -->
-  <view wx:if="{{nowTab == '0'}}">
+  <!-- 抽奖轮盘 1-->
+  <view wx:if="{{nowTab == '0'  && type == '1'}}">
 
     <view class="wheel-container">
       <view class="wheel" style="{{rotate?'animation: rotate 0.5s linear infinite;':''}}">
@@ -35,7 +35,26 @@
         <view >开始抽奖</view>
       </view>
     </view>
+  </view>
 
+    <!-- 抽奖轮盘 2-->
+  <view wx:if="{{nowTab == '0' && type == '2'}}">
+
+    <view class="wheel-container">
+      <view class="wheel" 
+      style="{{rotateStyle}}"
+      >
+        <view class="wheel-item" wx:for="{{scoreItems}}" wx:key="index" style="transform: rotate({{item.angle}}deg);background: {{item.bacckground}};color: {{item.color}};">
+          <view class="wheel-item-content">{{item.name}}</view>
+        </view>
+      </view>
+
+      <image src="/asset/img/箭头-下.png" mode="widthFix" />
+
+      <view class="wheel-center" bind:tap="chooseScoreAward">
+        <view >开始抽奖</view>
+      </view>
+    </view>
   </view>
 
 

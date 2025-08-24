@@ -1,5 +1,4 @@
 {
-  
   "pages": [
     "pages/index/index",
     "pages/home/home",
@@ -22,13 +21,12 @@
     "pages/aboutus/aboutus",
     "pages/track/track",
     "pages/authentication/authentication"
-
   ],
   "tabBar": {
     "custom": true,
     "color": "#FFFFFF",
     "selectedColor": "#f9bc60",
-    "list":  [
+    "list": [
       {
         "pagePath": "pages/home/home",
         "iconPath": "asset/img/trip.png",
@@ -42,25 +40,17 @@
         "selectedIconPath": "asset/img/info_highlight.png"
       },
       {
-        "pagePath": "pages/prizeCenter/prizeCenter",
-        "text": "积分兑换",
-        "iconPath": "asset/img/merch.png",
-        "selectedIconPath": "asset/img/merch_highlight.png"
-      },
-      {
-        "pagePath":"pages/center/center",
+        "pagePath": "pages/center/center",
         "text": "个人中心",
         "iconPath": "asset/img/personal.png",
         "selectedIconPath": "asset/img/personal_highlight.png"
       }
     ]
   },
-  "subPackages": [
-  ],
+  "subPackages": [],
   "usingComponents": {
-    "tab-bar":"custom-tab-bar/index"
+    "tab-bar": "custom-tab-bar/index"
   },
-
   "window": {
     "navigationBarBackgroundColor": "#418f8c",
     "navigationBarTextStyle": "white",
@@ -87,10 +77,6 @@
     "getLocation",
     "startLocationUpdate"
   ],
-  
-  "useExtendedLib": {
-  },
-  "plugins": {
-
-  }
+  "useExtendedLib": {},
+  "plugins": {}
 }

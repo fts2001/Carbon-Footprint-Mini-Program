@@ -127,3 +127,39 @@ export function getNowTime(): string {
 
   return `${hours}:${minutes}`;
 }
+
+/**
+ * @description: 判断2个时间戳之间的间距是否满足多少分钟
+ * @param {number} timestamp1
+ * @param {number} timestamp2
+ * @param {number} distance
+ * @return {*}
+ */
+export function isGreaterOrEqualMinutes(timestamp1: number, timestamp2: number, distance: number): boolean {
+  // 计算两个时间戳的绝对差值（毫秒）
+  const diff = Math.abs(timestamp1 - timestamp2);
+  const minutesInMs = distance * 60 * 1000;
+
+  // 判断差值是否大于等于3分钟
+  return diff >= minutesInMs;
+}
+
+/**
+ * 根据给定的概率返回 true 或 false
+ * @param denominator 分母，表示 1/n 的概率返回 true
+ * @returns 满足概率时返回 true，否则返回 false
+ */
+export function probability(denominator: number): boolean {
+  if (denominator <= 1) {
+    throw new Error("分母必须大于 1");
+  }
+
+  // 生成一个 [0, 1) 之间的随机数
+  const randomValue = Math.random();
+
+  // 计算概率阈值
+  const threshold = 1 / denominator;
+
+  // 如果随机数小于阈值，则返回 true
+  return randomValue < threshold;
+}

@@ -42,7 +42,7 @@ exports.main = async event => {
     const list = trackRes.data || [];
 
     // If there are track records, increment the user's credit
-    if (list.length) {
+    if (event.credit && list.length) {
       await transaction
         .collection("lottery")
         .doc(lotteryId)
@@ -50,10 +50,20 @@ exports.main = async event => {
     }
 
     // Update the user's carbon sum
-    await transaction
-      .collection("userInfo")
-      .doc(userId)
-      .update({ data: { carbSum: _.inc(event.carbon) } });
+    if (event.carbon) {
+      await transaction
+        .collection("userInfo")
+        .doc(userId)
+        .update({ data: { carbSum: _.inc(event.carbon) } });
+    }
+
+    // update user status
+    if (typeof event.firstStatus === "boolean") {
+      await transaction
+        .collection("userInfo")
+        .doc(userId)
+        .update({ data: { firstStatus: event.firstStatus } });
+    }
 
     // Commit the transaction if all operations succeeded
     await transaction.commit();

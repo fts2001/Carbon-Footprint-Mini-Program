@@ -1,6 +1,5 @@
 {
   "usingComponents": {
-
     "van-dialog": "@vant/weapp/dialog/index",
     "tab-bar":"../../custom-tab-bar/index"
   },
