@@ -89,18 +89,20 @@ Page({
             .catch(console.error);
         });
       } else {
-        Dialog.alert({
+        wx.showModal({
           title: "提示",
-          message: "很遗憾, 未中奖!"
-        }).then(() => {
-          that.data.award.isWin = false;
-          const db = wx.cloud.database();
-          db.collection("award")
-            .add({ data: that.data.award })
-            .then(() => {
-              this.showDialog();
-            })
-            .catch(console.error);
+          content: "很遗憾, 未中奖!",
+          showCancel: false,
+          success() {
+            that.data.award.isWin = false;
+            const db = wx.cloud.database();
+            db.collection("award")
+              .add({ data: that.data.award })
+              .then(() => {
+                this.showDialog();
+              })
+              .catch(console.error);
+          }
         });
       }
     }, 4000); // 动画时间与css保持一致

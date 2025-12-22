@@ -1,5 +1,6 @@
 // pages/detail/detail.ts
 import { updateColor } from "../../utils/colorschema";
+import { EventNames, eventTrack } from "../../utils/eventTrack";
 import { logEvent } from "../../utils/log";
 
 const app = getApp();
@@ -10,6 +11,9 @@ Page({
    * 页面的初始数据
    */
   data: {
+    /** 用户下滑次数，埋点用 */
+    scorllCount: 0,
+
     /** 页面成员数据 */
     sharedFromID: null,
     openTime: null,
@@ -82,6 +86,12 @@ Page({
    * 生命周期函数--监听页面卸载
    */
   onUnload() {
+    // [--- 埋点退出文章的时间 ---]
+    eventTrack.logEvent(EventNames.EXIT_ARTICLE_ITEM, {
+      article_id: this.data.article.id,
+      title: this.data.article.title
+    });
+
     // 计算阅读时间
     const endTime = new Date();
     const startTime = new Date(this.data.openTime);
@@ -127,5 +137,15 @@ Page({
         console.log("share failed");
       }
     };
+  },
+
+  onPageScroll(e: any) {
+    const scorllCount = this.data.scorllCount + 1;
+    this.setData({ scorllCount });
+    // [--- 埋点文章下滑的次数和位置 ---]
+    eventTrack.logEvent(EventNames.SCROLL_ARTICLE, {
+      scorllCount,
+      scrollTop: e.scrollTop
+    });
   }
 });

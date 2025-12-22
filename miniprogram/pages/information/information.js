@@ -1,6 +1,7 @@
 const { logEvent } = require("../../utils/log");
 const { updateUserData, onCheckSignIn } = require("../../utils/login");
 const { updateColor } = require("../../utils/colorschema");
+import { EventNames, eventTrack } from "../../utils/eventTrack";
 import { probability } from "../../utils/home.util";
 import { createTimer } from "../../utils/time";
 
@@ -714,12 +715,18 @@ Page({
   /**
    * UI 的文章点击事件
    */
-  bindClickArticle(e) {
+  async bindClickArticle(e) {
     logEvent("Read Article");
 
     // 获取点击的文章信息
     const articleID = e.currentTarget.dataset.id;
     const targetArticle = this.data.articleShowList.find(article => article._id === articleID);
+
+    // [--- 埋点进入的文章和时间 ---]
+    await eventTrack.logEvent(EventNames.CLICK_ARTICLE_ITEM, {
+      article_id: e.currentTarget.dataset.id,
+      title: targetArticle.title
+    });
 
     // 文章属性打包
     const title = encodeURIComponent(targetArticle.title);
@@ -973,6 +980,9 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    // [--- 埋点用户进入信息中心的时间 ---]
+    eventTrack.logEvent(EventNames.ENTER_INFORMATION_CENTER);
+
     // 底部选择栏更新
     this.getTabBar();
     if (typeof this.getTabBar === "function" && this.getTabBar()) {

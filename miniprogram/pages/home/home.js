@@ -1,5 +1,6 @@
 import Dialog from "@vant/weapp/dialog/dialog";
 import { updateColor } from "../../utils/colorschema";
+import { EventNames, eventTrack } from "../../utils/eventTrack";
 import { getLocation, getNowTime, isGreaterOrEqualMinutes, probability } from "../../utils/home.util";
 import { logEvent } from "../../utils/log";
 import { onCheckSignIn, updateUserData } from "../../utils/login";
@@ -261,6 +262,18 @@ Page({
           })) || {};
 
         console.log("trackRes---", trackRes);
+
+        // [--- 埋点用户记录行程的数据 ---]
+        eventTrack.logEvent(EventNames.TRACK_DATA, {
+          dist: this.data.dist,
+          stepList,
+          latitude,
+          longitude,
+          curID: _this.data.curID,
+          purpose: _this.data.purpose,
+          transport: _this.data.transport
+        });
+
         try {
           // const {
           //   data: { prediction }
@@ -491,6 +504,9 @@ Page({
     });
   },
   onShow() {
+    // [--- 埋点用户进入行程记录页的时间 ---]
+    eventTrack.logEvent(EventNames.ENTER_HOME);
+
     this.getTabBar();
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
       this.getTabBar().setData({ selected: 0 });

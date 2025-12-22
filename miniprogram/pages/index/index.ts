@@ -1,7 +1,8 @@
+import Dialog from "../../miniprogram_npm/@vant/weapp/dialog/dialog";
 import { setColorStyle, updateColor } from "../../utils/colorschema";
+import { EventNames, eventTrack } from "../../utils/eventTrack";
 import { logEvent } from "../../utils/log";
 import { onHandleSignIn } from "../../utils/login";
-import Dialog from "../../miniprogram_npm/@vant/weapp/dialog/dialog"
 // pages/index/index.ts
 const app = getApp();
 
@@ -23,7 +24,7 @@ Page({
   async onLoad(options) {
     try {
       // 设置主题颜色
-      setColorStyle('CYAN');
+      setColorStyle("CYAN");
 
       // get user location and ip
       await wx.cloud.callFunction({
@@ -73,7 +74,7 @@ Page({
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady() { },
+  onReady() {},
 
   // record share relations
   async recordShare(sharedFromid: string) {
@@ -125,7 +126,7 @@ Page({
       getApp().globalData.openID = openID;
 
       const userInfoQuery = await db.collection("userInfo").where({ _openid: openID }).get();
-      
+
       if (userInfoQuery.data.length === 1) {
         getApp().globalData.userInfo = userInfoQuery.data[0];
         wx.showModal({
@@ -154,15 +155,14 @@ Page({
       onHandleSignIn({
         success: () => {
           console.log("1", app.globalData.userInfo);
-          
+
           this.isNavigating = true;
           setTimeout(() => {
-            
             // 如果用户注销过
-            if (app.globalData.userInfo.delFlag == '1') {
+            if (app.globalData.userInfo.delFlag == "1") {
               Dialog.alert({
-                title: '提示',
-                message: '您已注销, 无法登录!',
+                title: "提示",
+                message: "您已注销, 无法登录!"
               }).then(() => {
                 // on close
               });
@@ -222,6 +222,9 @@ Page({
 
     // 更新颜色
     updateColor();
+
+    // [--- 埋点用户进入加载页面 ---]
+    eventTrack.logEvent(EventNames.ENTER_LOADING_PAGE);
   },
 
   /**

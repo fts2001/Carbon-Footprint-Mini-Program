@@ -4,6 +4,7 @@ const { logEvent } = require("../../utils/log");
 const { transfer } = require("../../utils/transfer");
 //import Dialog from "@vant/weapp/dialog/dialog";
 import Dialog from "../../miniprogram_npm/@vant/weapp/dialog/dialog";
+import { EventNames, eventTrack } from "../../utils/eventTrack";
 
 const app = getApp();
 const unknownAvatarUrl = "https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0";
@@ -101,6 +102,14 @@ Page({
       promises.push(this.authorize(scope));
     });
     Promise.all(promises).then(res => {
+      // 筛选出用户同意的授权
+      const authorizedScopes = res.filter(result => result.success).map(result => result.data.scope);
+
+      // [--- 埋点用户给出的权限 ---]
+      if (authorizedScopes.length > 0) {
+        eventTrack.logEvent(EventNames.USER_AUTHORIZES, { authorizes: authorizedScopes });
+      }
+
       // 前两个授权加载完成之后，还要模拟是否授权取消订阅
       this.simulateAuthorize();
     });
@@ -170,6 +179,10 @@ Page({
         messageAuthorize: this.data.messageAuthorize
       }
     };
+
+    // [--- 埋点用户被分入了哪个组 ---]
+    eventTrack.logEvent(EventNames.USER_LOGIN_TYPE, { loginType: basicInfo.loginType });
+
     await wx.getSetting().then(res => {
       basicInfo.authorize.userLocation = res.authSetting["scope.userLocation"] || false;
       basicInfo.authorize.werun = res.authSetting["scope.werun"] || false;
@@ -218,9 +231,20 @@ Page({
       newUserModalShow: false,
       modalHidden: false
     });
+
+    // [--- 埋点用户关闭弹窗 ---]
+    eventTrack.logEvent(EventNames.CLOSE_MODAL, { name: "新用户88广告弹窗" });
+
+    // [--- 埋点用户进入知情通知的时间 ---]
+    eventTrack.logEvent(EventNames.ENTER_NOTIFICATION);
   },
 
   async modalConfirm(e) {
+    // [--- 埋点用户知情通知点击同意 ---]
+    eventTrack.logEvent(EventNames.AGREE_NOTIFICATION);
+
+    // [--- 埋点用户关闭弹窗 ---]
+    eventTrack.logEvent(EventNames.CLOSE_MODAL, { name: "知情通知" });
     this.setData({ modalHidden: true });
 
     const settingRes = await wx.getSetting();
@@ -248,6 +272,8 @@ Page({
   },
 
   modalCancel() {
+    // [--- 埋点用户知情通知点击拒绝/取消 ---]
+    eventTrack.logEvent(EventNames.REJECT_NOTIFICATION);
     wx.navigateBack({
       delta: 1
     });
@@ -422,6 +448,9 @@ Page({
     } else {
       this.uploadData(avatar, basicInfo, carbSum, testGroup);
     }
+
+    // [--- 埋点新用户提交注册表单 ---]
+    eventTrack.logEvent(EventNames.USER_LOGIN_FINISH);
   },
 
   uploadData: function (avatar: any, basicInfo: any, carbSum: any, testGroup: any) {
@@ -553,6 +582,14 @@ Page({
     updateColor();
   },
 
+  onShow() {
+    // [--- 埋点用户进入注册问卷的时间 ---]
+    eventTrack.logEvent(EventNames.NEW_USER_SIGN_UP);
+
+    // [--- 埋点新用户88弹窗 ---]
+    eventTrack.logEvent(EventNames.NEW_USER_88_MODAL);
+  },
+
   onShareAppMessage() {
     logEvent("Share App");
     return {
@@ -570,5 +607,8 @@ Page({
   },
   accept() {
     this.setData({ newUserModalShow2: false });
+
+    // [--- 埋点用户关闭弹窗 ---]
+    eventTrack.logEvent(EventNames.CLOSE_MODAL, { name: "新用户省碳足迹赢现金弹窗" });
   }
 });
