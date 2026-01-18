@@ -246,6 +246,7 @@ Page({
     // [--- 埋点用户关闭弹窗 ---]
     eventTrack.logEvent(EventNames.CLOSE_MODAL, { name: "知情通知" });
     this.setData({ modalHidden: true });
+    this.setData({ newUserModalShow2: true });
 
     const settingRes = await wx.getSetting();
     if (!settingRes.authSetting["scope.userLocationBackground"]) {
@@ -268,7 +269,7 @@ Page({
       }
     });
 
-    this.setData({ newUserModalShow2: true });
+
   },
 
   modalCancel() {
