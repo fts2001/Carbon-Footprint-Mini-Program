@@ -666,43 +666,93 @@ Page({
   },
   async confirmPrize() {
     this.setData({ prizeModalShow: false });
-    // 调用云函数发钱
-    wx.cloud.callFunction({
-      name: "sendCashReward",
-      data: {
-        u_openid: app.globalData.openID,
-        type: "0",
-        money: String(50) // 0.5
-      },
-      success: res => {
-        if (res.result && res.result.success) {
-          wx.showModal({
-            title: "恭喜！",
-            content: "首次注册获得0.5注册金",
-            showCancel: false
-          });
-          this.setData({
-            rotateDeg: 0,
-            rotateStyle: "transform: rotate(0deg);"
-          });
-        } else {
-          wx.showToast({
-            title: "发放失败，请稍后再试",
-            icon: "error",
-            duration: 1500
-          });
-        }
-      },
-      fail: err => {
-        console.error("云函数调用失败:", err);
-        wx.showToast({
-          title: "请求失败",
-          icon: "error",
-          duration: 1500
-        });
-      }
+
+    console.log('[首次奖励] 开始创建红包ticket', {
+      type: 1,
+      money: 50,
+      timestamp: new Date().toISOString()
     });
 
+    wx.showLoading({
+      title: '正在生成红包...',
+      mask: true
+    });
+
+    try {
+      // 调用云函数创建红包ticket
+      const res = await wx.cloud.callFunction({
+        name: 'sendCashReward',
+        data: {
+          type: 1,  // 1代表注册奖励
+          money: 50  // 0.5元 = 50分
+        }
+      });
+
+      console.log('[首次奖励] 云函数返回结果:', res);
+
+      wx.hideLoading();
+
+      if (res.result && res.result.success && res.result.ticket) {
+        const ticket = res.result.ticket;
+        const domain = res.result.domain || 'mp001.yaoyaola.net';
+
+        console.log('[首次奖励] Ticket创建成功', {
+          ticket: ticket,
+          domain: domain,
+          timestamp: new Date().toISOString()
+        });
+
+        // 显示提示
+        wx.showToast({
+          title: '红包已生成',
+          icon: 'success',
+          duration: 1500
+        });
+
+        // 延迟后跳转到红包领取页面
+        setTimeout(() => {
+          const redPacketUrl = `https://${domain}/exapi/gethb/10815051?ticket=${ticket}`;
+          console.log('[首次奖励] 跳转到红包领取页面:', redPacketUrl);
+
+          wx.navigateTo({
+            url: `/pages/redpacket/redpacket?url=${encodeURIComponent(redPacketUrl)}`,
+            fail: (err) => {
+              console.error('[首次奖励] 跳转失败:', err);
+              wx.showModal({
+                title: '提示',
+                content: '请稍后在"我的奖励"页面查看红包',
+                showCancel: false
+              });
+            }
+          });
+        }, 1500);
+      } else {
+        console.error('[首次奖励] Ticket创建失败', {
+          result: res.result,
+          timestamp: new Date().toISOString()
+        });
+
+        wx.showToast({
+          title: '红包生成失败，请联系客服',
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    } catch (err) {
+      console.error('[首次奖励] 调用异常:', err, {
+        timestamp: new Date().toISOString()
+      });
+
+      wx.hideLoading();
+
+      wx.showToast({
+        title: '网络错误，稍后请联系客服领取奖励',
+        icon: 'none',
+        duration: 2000
+      });
+    }
+
+    // 更新用户的firstStatus状态
     await wx.cloud.callFunction({
       name: "updateUserInfo",
       data: { firstStatus: false }
