@@ -10,52 +10,67 @@ function hexMD5(string) {
 }
 
 exports.main = async (event, context) => {
-  const { u_openid, type, money } = event;
-
-  if (!u_openid) {
-    console.log('User openid is required');
-    return {
-      success: false,
-      message: 'User openid is required'
-    };
-  }
+  const { type, money } = event;
 
   const apikey = 'carbclever';
   const uid = '10815051';
-  const orderid = `${Date.now()}${u_openid}`;
-  const reqtick = Math.floor(Date.now() / 1000); // Convert to seconds
-  const openid = u_openid;
-  const sig = hexMD5(`${uid}${type}${orderid}${money}${reqtick}${openid}${apikey}`);
-
-  // Create query parameters string
-  const queryParams = new URLSearchParams({
-    uid,
-    type,
-    orderid,
-    money,
-    reqtick,
-    openid,
-    sign: sig,
-    title: '现金发奖',
-    sendname: '碳行家',
-    wishing: '心想事成'
-  }).toString();
-
-  const url = `https://mp001.yaoyaola.net/exapi/SendRedPackToOpenid?${queryParams}`;
-
-  console.log('Sending request to URL:', url);
 
   try {
-    const response = await axios.get(url, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    console.log('Response:', response.data);
-    return {
-      success: true,
-      data: response.data
-    };
+    // Step 1: 先获取可用的前端授权域名
+    console.log('Step 1: 获取前端授权域名');
+    const domainUrl = `https://www.yaoyaola.net/exapi/get_authdomain/${uid}`;
+    const domainResponse = await axios.get(domainUrl);
+    console.log('Domain response:', domainResponse.data);
+
+    if (domainResponse.data.errcode !== '0' || !domainResponse.data.domain) {
+      return {
+        success: false,
+        message: 'Failed to get auth domain: ' + (domainResponse.data.errmsg || 'Unknown error')
+      };
+    }
+
+    const frontendDomain = domainResponse.data.domain;
+    console.log('Got frontend domain:', frontendDomain);
+
+    // Step 2: 创建红包ticket
+    console.log('Step 2: 创建红包ticket');
+    const orderid = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
+    const reqtick = Math.floor(Date.now() / 1000);
+    const sig = hexMD5(`${uid}${type}${orderid}${money}${reqtick}${apikey}`);
+
+    const queryParams = new URLSearchParams({
+      uid,
+      type,
+      orderid,
+      money,
+      reqtick,
+      expire: 3600,
+      sign: sig,
+      title: '现金发奖',
+      sendname: '碳行家',
+      wishing: '心想事成'
+    }).toString();
+
+    const ticketUrl = `https://www.yaoyaola.net/exapi/hbticket?${queryParams}`;
+    console.log('Creating ticket with URL:', ticketUrl);
+
+    const ticketResponse = await axios.get(ticketUrl);
+    console.log('Ticket response:', ticketResponse.data);
+
+    if (ticketResponse.data.errcode === '0' && ticketResponse.data.ticket) {
+      return {
+        success: true,
+        ticket: ticketResponse.data.ticket,
+        domain: frontendDomain,  // 返回前端域名
+        orderid: orderid,
+        message: 'Ticket created successfully'
+      };
+    } else {
+      return {
+        success: false,
+        message: ticketResponse.data.errmsg || 'Failed to create ticket'
+      };
+    }
   } catch (error) {
     console.error('Error:', error);
     return {

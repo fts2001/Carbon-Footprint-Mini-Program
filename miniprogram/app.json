@@ -20,6 +20,7 @@
     "pages/merchDetail/merchDetail",
     "pages/aboutus/aboutus",
     "pages/track/track",
+    "pages/redpacket/redpacket",
     "pages/authentication/authentication"
   ],
   "tabBar": {

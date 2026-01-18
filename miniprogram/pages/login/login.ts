@@ -483,16 +483,20 @@ Page({
 
         if (res.result && typeof res.result === "object" && "success" in res.result) {
           if (res.result.success) {
-            // this.transferEntranceMoney({
-            //   complete: () => {
-            //     wx.reLaunch({
-            //       url: "/pages/authentication/authentication"
-            //     });
-            //   }
-            // });
-            wx.reLaunch({
-              url: "/pages/authentication/authentication"
+            // 注册成功，显示提示
+            wx.hideToast();
+            wx.showToast({
+              title: '注册成功！',
+              icon: 'success',
+              duration: 2000
             });
+
+            // 注册成功后跳转到信息页面
+            setTimeout(() => {
+              wx.reLaunch({
+                url: "/pages/information/information"
+              });
+            }, 2000);
           }
         }
       }
@@ -610,5 +614,99 @@ Page({
 
     // [--- 埋点用户关闭弹窗 ---]
     eventTrack.logEvent(EventNames.CLOSE_MODAL, { name: "新用户省碳足迹赢现金弹窗" });
+
+    // 发放注册奖励
+    this.sendNewUserReward();
+  },
+
+  // 发放新用户注册奖励
+  async sendNewUserReward() {
+    console.log('[发红包] 开始创建红包ticket', {
+      type: 1,
+      money: 30,
+      timestamp: new Date().toISOString()
+    });
+
+    wx.showLoading({
+      title: '正在生成红包...',
+      mask: true
+    });
+
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'sendCashReward',
+        data: {
+          type: 1,  // 1代表新用户注册奖励
+          money: 30  // 注册奖励金额（单位：分）
+        }
+      });
+
+      console.log('[发红包] 云函数返回结果:', res);
+
+      wx.hideLoading();
+
+      if (res.result && res.result.success && res.result.ticket) {
+        const ticket = res.result.ticket;
+        const domain = res.result.domain || 'mp001.yaoyaola.net'; // 使用动态域名，如果没有则使用默认值
+
+        console.log('[发红包] Ticket创建成功', {
+          ticket: ticket,
+          domain: domain,
+          timestamp: new Date().toISOString()
+        });
+
+        // 显示提示
+        wx.showToast({
+          title: '红包已生成',
+          icon: 'success',
+          duration: 1500
+        });
+
+        // 延迟后跳转到红包领取页面
+        setTimeout(() => {
+          const redPacketUrl = `https://${domain}/exapi/gethb/10815051?ticket=${ticket}`;
+          console.log('[发红包] 跳转到红包领取页面:', redPacketUrl);
+
+          wx.navigateTo({
+            url: `/pages/redpacket/redpacket?url=${encodeURIComponent(redPacketUrl)}`,
+            fail: (err) => {
+              console.error('[发红包] 跳转失败，使用备用方案:', err);
+              // 备用方案：直接用web-view组件
+              wx.showModal({
+                title: '提示',
+                content: '请稍后在"我的奖励"页面查看红包',
+                showCancel: false
+              });
+            }
+          });
+        }, 1500);
+      } else {
+        console.error('[发红包] Ticket创建失败', {
+          result: res.result,
+          timestamp: new Date().toISOString()
+        });
+
+        // 创建失败，但不阻止用户继续使用
+        wx.showToast({
+          title: '红包生成失败，请联系客服',
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    } catch (err) {
+      console.error('[发红包] 调用异常:', err, {
+        timestamp: new Date().toISOString(),
+        errorDetails: JSON.stringify(err)
+      });
+
+      wx.hideLoading();
+
+      // 发生错误，但不阻止用户继续使用
+      wx.showToast({
+        title: '网络错误，稍后请联系客服领取奖励',
+        icon: 'none',
+        duration: 2000
+      });
+    }
   }
 });
