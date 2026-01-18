@@ -14,10 +14,11 @@
       <image class="exchange-icon" src="../../asset/img/exchange.png" style="position: relative; left: -38rpx; top: 5rpx"></image>
       {{merch.price}} 兑换
     </button> -->
-    <button class="claim-button" open-type="getRealtimePhoneNumber" bindgetrealtimephonenumber="getrealtimephonenumber">
+    <button class="claim-button" bindtap="claimMerch">
       <image class="exchange-icon" src="../../asset/img/exchange.png" style="position: relative; left: -38rpx; top: 5rpx"></image>
       {{merch.price}} 兑换
     </button>
+
 
 
   </view>

@@ -41,7 +41,7 @@ Page({
       console.log("Information页面已经初始化过了！");
     }
   },
-  onReady() {},
+  onReady() { },
   onLoad(options) {
     // 转发朋友圈链接，导航到登录页面
     if (options.isFromShareTimeline) {
@@ -106,7 +106,9 @@ Page({
           title: item.title,
           description: item.descp_short,
           longDescription: item.descp_full,
-          price: item.price
+          price: item.price,
+          type: item.type,  // 现金/实物标识
+          cash_amount: item.cash_amount  // 现金金额（分）
         }));
       // set local storage
       wx.setStorageSync("prizes", prizes);

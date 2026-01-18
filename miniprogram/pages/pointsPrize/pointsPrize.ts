@@ -111,15 +111,15 @@ Page({
   chooseScoreAward(e) {
     if (this.data.rotate) return;
     if (this.data.expired) return wx.toast({ title: "当前活动已过期", icon: "none" });
-    if ((this.data.credits || 0) < 88) return wx.toast({ title: "当前积分不足", icon: "none" });
+    if ((this.data.credits || 0) < 99) return wx.showToast({ title: "当前积分不足", icon: "none" });
     this.setData({ award: e.currentTarget.dataset.item, showAward: false });
 
     // 定义奖项概率
     const prizeProbabilities = [
-      { name: "88元", probability: 1 }, // 0.001% → 1/1000
+      { name: "88元", probability: 1 }, // 0.001% (几乎不可中)
       { name: "5元", probability: 10000 }, // 10%
-      { name: "1元", probability: 29999 }, // 29.999%
-      { name: "0.5元", probability: 60000 } // 60%
+      { name: "1元", probability: 30000 }, // 30%
+      { name: "0.5元", probability: 59999 } // 59.999%
     ];
 
     const total = prizeProbabilities.reduce((sum, prize) => sum + prize.probability, 0);
@@ -165,7 +165,7 @@ Page({
         .doc(res.data[0]._id)
         .update({
           data: {
-            credit: _.inc(-88)
+            credit: _.inc(-99)
           }
         });
 
@@ -185,42 +185,61 @@ Page({
         message = "恭喜你中了0.5元! 奖品将自动发放到你的账户。";
       }
 
-      // 调用云函数发钱
-      wx.cloud.callFunction({
+      // 调用云函数创建红包ticket
+      console.log("[抽奖] 创建红包ticket，金额:", money);
+      const ticketRes = await wx.cloud.callFunction({
         name: "sendCashReward",
         data: {
-          u_openid: app.globalData.openID,
-          type: "0",
-          money: String(money)
-        },
-        success: res => {
-          if (res.result && res.result.success) {
-            wx.showModal({
-              title: "恭喜！",
-              content: message,
-              showCancel: false
-            });
-            this.setData({
-              rotateDeg: 0,
-              rotateStyle: "transform: rotate(0deg);"
-            });
-          } else {
-            wx.showToast({
-              title: "发放失败，请稍后再试",
-              icon: "error",
-              duration: 1500
-            });
-          }
-        },
-        fail: err => {
-          console.error("云函数调用失败:", err);
-          wx.showToast({
-            title: "请求失败",
-            icon: "error",
-            duration: 1500
-          });
+          type: 1,
+          money: money
         }
       });
+
+      console.log("[抽奖] 云函数返回:", ticketRes);
+
+      if (ticketRes.result && ticketRes.result.success && ticketRes.result.ticket) {
+        const ticket = ticketRes.result.ticket;
+        const domain = ticketRes.result.domain || "mp001.yaoyaola.net";
+        const redPacketUrl = `https://${domain}/exapi/gethb/10815051?ticket=${ticket}`;
+
+        console.log("[抽奖] Ticket创建成功，跳转到红包页面");
+
+        this.setData({
+          rotateDeg: 0,
+          rotateStyle: "transform: rotate(0deg);"
+        });
+
+        wx.showToast({
+          title: "红包已生成",
+          icon: "success",
+          duration: 1500
+        });
+
+        setTimeout(() => {
+          wx.navigateTo({
+            url: `/pages/redpacket/redpacket?url=${encodeURIComponent(redPacketUrl)}`,
+            fail: err => {
+              console.error("[抽奖] 跳转失败:", err);
+              wx.showModal({
+                title: "提示",
+                content: "请稍后在我的奖励页面查看红包",
+                showCancel: false
+              });
+            }
+          });
+        }, 1500);
+      } else {
+        console.error("[抽奖] Ticket创建失败");
+        wx.showToast({
+          title: "发放失败，请稍后再试",
+          icon: "none",
+          duration: 2000
+        });
+        this.setData({
+          rotateDeg: 0,
+          rotateStyle: "transform: rotate(0deg);"
+        });
+      }
     }, 2000);
   },
   // 展示实验说明
@@ -286,11 +305,11 @@ Page({
       console.log(err);
     }
   },
-  onReady() {},
-  onShow() {},
-  onHide() {},
-  onUnload() {},
-  onPullDownRefresh() {},
-  onReachBottom() {},
-  onShareAppMessage() {}
+  onReady() { },
+  onShow() { },
+  onHide() { },
+  onUnload() { },
+  onPullDownRefresh() { },
+  onReachBottom() { },
+  onShareAppMessage() { }
 });

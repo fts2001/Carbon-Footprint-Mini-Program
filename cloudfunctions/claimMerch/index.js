@@ -10,10 +10,12 @@ const _ = db.command;
 
 exports.main = async (event, context) => {
   const { openid, merch_id, merch_name, price } = event;
-  
+
+  let transaction;
+
   try {
     // Start a transaction
-    const transaction = await db.startTransaction();
+    transaction = await db.startTransaction();
     // Get user entry
     const userRes = await transaction.collection('lottery').where({ _openid: openid }).get();
     if (userRes.data.length === 0) {
@@ -70,7 +72,13 @@ exports.main = async (event, context) => {
     console.error('Error claiming merch:', error);
 
     // Rollback the transaction if any error occurs
-    await transaction.rollback();
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (rollbackError) {
+        console.error('Error rolling back transaction:', rollbackError);
+      }
+    }
 
     return {
       success: false,
@@ -78,3 +86,4 @@ exports.main = async (event, context) => {
     };
   }
 };
+
