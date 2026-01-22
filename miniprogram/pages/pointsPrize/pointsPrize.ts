@@ -170,7 +170,7 @@ Page({
         .doc(res.data[0]._id)
         .update({
           data: {
-            credit: _.inc(-99)
+            credit: _.inc(-200)
           }
         });
 
