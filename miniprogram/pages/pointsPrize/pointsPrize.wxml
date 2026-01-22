@@ -30,7 +30,7 @@
 
       <image src="/asset/img/箭头-下.png" mode="widthFix" />
 
-      <view class="wheel-center">
+      <view class="wheel-center" bind:tap="showAwardDialog">
         <!-- <view style="color: #f9bc60;font-size: 40rpx;font-weight: 600;">1</view> -->
         <view >开始抽奖</view>
       </view>

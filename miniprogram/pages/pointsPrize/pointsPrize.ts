@@ -51,6 +51,11 @@ Page({
     ]
   },
 
+  // 显示奖品选择对话框
+  showAwardDialog() {
+    this.setData({ showAward: true });
+  },
+
   // 修改后的选择奖品逻辑（ui为1/8，实际为1/16）
   chooseAward(e) {
     const that = this;
@@ -110,7 +115,7 @@ Page({
 
   chooseScoreAward(e) {
     if (this.data.rotate) return;
-    if (this.data.expired) return wx.toast({ title: "当前活动已过期", icon: "none" });
+    if (this.data.expired) return wx.showToast({ title: "当前活动已过期", icon: "none" });
     if ((this.data.credits || 0) < 99) return wx.showToast({ title: "当前积分不足", icon: "none" });
     this.setData({ award: e.currentTarget.dataset.item, showAward: false });
 

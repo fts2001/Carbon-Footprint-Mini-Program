@@ -37,6 +37,8 @@
   position: absolute;
   left: 35%;
   top: -24%;
+  z-index: 50;
+  pointer-events: none;
 }
 
 .wheel {
@@ -64,12 +66,14 @@
     0% 59%,
     0% 0%
   );
+  pointer-events: none;
 }
 
 .wheel-item-content {
   transform: rotate(-45deg);
   text-align: center;
   font-size: 32rpx;
+  pointer-events: auto;
 }
 .wheel-center{
   position: absolute;
@@ -84,6 +88,8 @@
   flex-direction: column;
   background: #419f8c;
   color: #FFF;
+  z-index: 100;
+  pointer-events: auto;
 }
 
 .awardView{
