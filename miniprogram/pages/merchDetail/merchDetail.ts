@@ -118,7 +118,7 @@ Page({
     });
   },
 
-  // 实物兑换（原有逻辑）
+  // 实物兑换（带互斥检查）
   async exchangePhysical() {
     const app = getApp();
     const openid = app.globalData.openID;
@@ -126,48 +126,102 @@ Page({
     const merch_id = this.data.merch.merch_id;
     const merch_name = this.data.merch.title;
 
-    wx.showModal({
-      title: '请您确认',
-      content: '以 ' + price + ' 积分兑换 ' + merch_name + '?',
-      success(res) {
-        if (res.confirm) {
-          wx.cloud.callFunction({
-            name: 'claimMerch',
-            data: {
-              openid,
-              merch_id,
-              price,
-              merch_name
-            },
-            success: res => {
-              if (res.result !== undefined) {
-                console.log('the console message', res);
-                wx.showModal({
-                  title: '兑换成功',
-                  content: '请于我的奖品页查看并兑奖',
-                  showCancel: false
-                });
-              } else {
-                wx.showToast({
-                  title: '请稍后再试',
-                  icon: 'error',
-                  duration: 2000
-                });
-              }
-            },
-            fail: err => {
-              console.error('Error calling cloud function:', err);
-              wx.showToast({
-                title: '请稍后再试',
-                icon: 'error',
-                duration: 2000
-              });
-            }
-          });
-        }
+    // 检查用户是否已兑换过实物奖品
+    wx.showLoading({ title: '检查中...', mask: true });
+
+    try {
+      const db = wx.cloud.database();
+      const existingExchange = await db.collection('prizeExchange')
+        .where({ _openid: openid })
+        .get();
+
+      wx.hideLoading();
+
+      if (existingExchange.data.length > 0) {
+        return wx.showModal({
+          title: '提示',
+          content: '您已兑换过奖品，每人只能兑换一次',
+          showCancel: false
+        });
       }
-    });
+
+      // 显示确认对话框
+      wx.showModal({
+        title: '请您确认',
+        content: `以 ${price} 积分兑换 ${merch_name}？每人只能兑换一次奖品。`,
+        success: async (res) => {
+          if (res.confirm) {
+            await this.performPhysicalExchange(openid, merch_id, price, merch_name);
+          }
+        }
+      });
+    } catch (err) {
+      wx.hideLoading();
+      console.error('检查兑换记录失败:', err);
+      wx.showToast({
+        title: '请稍后再试',
+        icon: 'error',
+        duration: 2000
+      });
+    }
   },
+
+  // 执行实物兑换
+  async performPhysicalExchange(openid, merch_id, price, merch_name) {
+    try {
+      wx.showLoading({ title: '兑换中...', mask: true });
+
+      const result = await wx.cloud.callFunction({
+        name: 'claimMerch',
+        data: {
+          openid,
+          merch_id,
+          price,
+          merch_name
+        }
+      });
+
+      if (result.result !== undefined) {
+        console.log('兑换成功', result);
+
+        // 记录到 prizeExchange 集合（用于互斥检查）
+        const db = wx.cloud.database();
+        await db.collection('prizeExchange').add({
+          data: {
+            merch_id,
+            merch_name,
+            pointsSpent: price,
+            exchangeTime: new Date(),
+            status: 'pending'
+          }
+        });
+
+        wx.hideLoading();
+
+        wx.showModal({
+          title: '兑换成功',
+          content: '请于我的奖品页查看并兑奖。您已兑换过奖品，无法再次兑换其他奖品。',
+          showCancel: false
+        });
+      } else {
+        wx.hideLoading();
+        wx.showToast({
+          title: '请稍后再试',
+          icon: 'error',
+          duration: 2000
+        });
+      }
+    } catch (err) {
+      wx.hideLoading();
+      console.error('兑换失败:', err);
+      wx.showToast({
+        title: '请稍后再试',
+        icon: 'error',
+        duration: 2000
+      });
+    }
+  },
+
 
 
   onShow() {
